@@ -11,26 +11,55 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0f0f1a"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aftr.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "AFTR needs your location to show you parties nearby."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0f0f1a"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.aftr.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "AFTR",
+      "shortName": "AFTR",
+      "description": "Conecta. Fiesta. Repite. Encuentra y organiza previas y afters para eventos.",
+      "lang": "es",
+      "themeColor": "#000000",
+      "backgroundColor": "#000000"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AFTR needs your location to show you parties nearby."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AFTR needs access to your photos to set your profile picture."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

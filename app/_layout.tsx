@@ -1,25 +1,77 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { WebContainer } from '@/components/WebContainer';
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(tabs)',
+  initialRouteName: '(auth)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+function RootLayoutNav() {
+  const { session, user, loading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+    const inOnboardingGroup = segments[0] === '(onboarding)';
+
+    if (!session) {
+      if (!inAuthGroup) {
+        router.replace('/(auth)/login');
+      }
+    } else if (!user?.onboarding_complete) {
+      if (!inOnboardingGroup) {
+        router.replace('/(onboarding)/welcome');
+      }
+    } else {
+      if (inAuthGroup || inOnboardingGroup) {
+        router.replace('/(tabs)');
+      }
+    }
+  }, [session, user, loading, segments]);
+
+  const beRealTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: '#000000',
+      card: '#0a0a0a',
+      text: '#ffffff',
+      border: '#262626',
+      primary: '#ffffff',
+      notification: '#ffffff',
+    },
+  };
+
+  return (
+    <ThemeProvider value={beRealTheme}>
+      <WebContainer>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(onboarding)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="event/[id]" options={{ presentation: 'card' }} />
+          <Stack.Screen name="party/[id]" options={{ presentation: 'card' }} />
+        </Stack>
+      </WebContainer>
+    </ThemeProvider>
+  );
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -27,7 +79,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -42,18 +93,9 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
   );
 }
