@@ -59,15 +59,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     const init = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      if (!active) return;
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!active) return;
 
-      setSession(currentSession);
-      if (currentSession?.user?.id) {
-        const userData = await fetchUser(currentSession.user.id);
-        if (active) setUser(userData);
+        setSession(currentSession);
+        if (currentSession?.user?.id) {
+          const userData = await fetchUser(currentSession.user.id);
+          if (active) setUser(userData);
+        }
+        setLoading(false);
+      } catch (error) {
+        // Ignore AbortError - happens during component remount in React 19
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Auth initialization error:', error);
+        if (active) setLoading(false);
       }
-      setLoading(false);
     };
 
     init();
@@ -75,12 +84,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         if (!active) return;
-        setSession(newSession);
-        if (newSession?.user?.id) {
-          const userData = await fetchUser(newSession.user.id);
-          if (active) setUser(userData);
-        } else {
-          setUser(null);
+        try {
+          setSession(newSession);
+          if (newSession?.user?.id) {
+            const userData = await fetchUser(newSession.user.id);
+            if (active) setUser(userData);
+          } else {
+            setUser(null);
+          }
+        } catch (error) {
+          // Ignore AbortError
+          if (error instanceof Error && error.name === 'AbortError') {
+            return;
+          }
+          console.error('Auth state change error:', error);
         }
       }
     );
