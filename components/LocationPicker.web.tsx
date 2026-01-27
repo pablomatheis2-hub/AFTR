@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -38,6 +38,144 @@ export function LocationPicker({
     address: string;
   } | null>(null);
   const [manualAddress, setManualAddress] = useState('');
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+
+  const reverseGeocode = async (latitude: number, longitude: number) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
+      const data = await response.json();
+      return data.display_name?.split(',').slice(0, 3).join(',') || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+    } catch {
+      return `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+    }
+  };
+
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    setLoading(true);
+    setCoordinates({ lat, lng });
+    
+    const address = await reverseGeocode(lat, lng);
+    setSelectedLocation({
+      latitude: lat,
+      longitude: lng,
+      address,
+    });
+    setManualAddress(address);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    if (!modalVisible || !mapContainerRef.current) return;
+
+    const initMap = async () => {
+      // Dynamically load Leaflet CSS
+      if (!document.getElementById('leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+
+      // Dynamically load Leaflet JS
+      if (!(window as any).L) {
+        await new Promise<void>((resolve) => {
+          const script = document.createElement('script');
+          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+          script.onload = () => resolve();
+          document.head.appendChild(script);
+        });
+      }
+
+      const L = (window as any).L;
+
+      // Clean up existing map
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
+
+      // Create map
+      const map = L.map(mapContainerRef.current).setView([coordinates.lat, coordinates.lng], 15);
+      mapInstanceRef.current = map;
+
+      // Add dark tile layer
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Add click handler
+      map.on('click', (e: any) => {
+        const { lat, lng } = e.latlng;
+        
+        // Update or create marker
+        if (markerRef.current) {
+          markerRef.current.setLatLng([lat, lng]);
+        } else {
+          markerRef.current = L.marker([lat, lng], {
+            icon: L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="width:24px;height:24px;background:#fff;border-radius:50%;border:3px solid #000;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            }),
+          }).addTo(map);
+        }
+        
+        handleMapClick(lat, lng);
+      });
+
+      // Add existing marker if there's a selected location
+      if (selectedLocation) {
+        markerRef.current = L.marker([selectedLocation.latitude, selectedLocation.longitude], {
+          icon: L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="width:24px;height:24px;background:#fff;border-radius:50%;border:3px solid #000;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          }),
+        }).addTo(map);
+      }
+    };
+
+    // Small delay to ensure container is rendered
+    const timer = setTimeout(initMap, 100);
+    return () => {
+      clearTimeout(timer);
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+        markerRef.current = null;
+      }
+    };
+  }, [modalVisible]);
+
+  // Update map view when coordinates change
+  useEffect(() => {
+    if (mapInstanceRef.current && coordinates) {
+      mapInstanceRef.current.setView([coordinates.lat, coordinates.lng], 15);
+      
+      const L = (window as any).L;
+      if (L && selectedLocation) {
+        if (markerRef.current) {
+          markerRef.current.setLatLng([selectedLocation.latitude, selectedLocation.longitude]);
+        } else {
+          markerRef.current = L.marker([selectedLocation.latitude, selectedLocation.longitude], {
+            icon: L.divIcon({
+              className: 'custom-marker',
+              html: '<div style="width:24px;height:24px;background:#fff;border-radius:50%;border:3px solid #000;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>',
+              iconSize: [24, 24],
+              iconAnchor: [12, 12],
+            }),
+          }).addTo(mapInstanceRef.current);
+        }
+      }
+    }
+  }, [coordinates, selectedLocation]);
 
   const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
@@ -51,28 +189,13 @@ export function LocationPicker({
         const { latitude, longitude } = position.coords;
         setCoordinates({ lat: latitude, lng: longitude });
 
-        // Try to get address from coordinates using a free geocoding service
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-          );
-          const data = await response.json();
-          const address = data.display_name || `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-
-          setSelectedLocation({
-            latitude,
-            longitude,
-            address: address.split(',').slice(0, 3).join(','),
-          });
-          setManualAddress(address.split(',').slice(0, 3).join(','));
-        } catch (error) {
-          setSelectedLocation({
-            latitude,
-            longitude,
-            address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
-          });
-          setManualAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
-        }
+        const address = await reverseGeocode(latitude, longitude);
+        setSelectedLocation({
+          latitude,
+          longitude,
+          address,
+        });
+        setManualAddress(address);
         setLoading(false);
       },
       (error) => {
@@ -124,7 +247,6 @@ export function LocationPicker({
       });
       setModalVisible(false);
     } else if (manualAddress.trim()) {
-      // Allow manual address entry without coordinates
       onLocationSelect({
         latitude: coordinates.lat,
         longitude: coordinates.lng,
@@ -133,9 +255,6 @@ export function LocationPicker({
       setModalVisible(false);
     }
   };
-
-  // Use OpenStreetMap embed (no API key required)
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${coordinates.lng - 0.01},${coordinates.lat - 0.01},${coordinates.lng + 0.01},${coordinates.lat + 0.01}&layer=mapnik&marker=${coordinates.lat},${coordinates.lng}`;
 
   return (
     <>
@@ -202,17 +321,13 @@ export function LocationPicker({
             </View>
 
             <View style={styles.mapContainer}>
-              <iframe
-                src={mapUrl}
+              <div
+                ref={mapContainerRef as any}
                 style={{
                   width: '100%',
                   height: '100%',
-                  border: 'none',
                   borderRadius: 16,
                 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
               />
               {loading && (
                 <View style={styles.loadingOverlay}>
@@ -220,6 +335,20 @@ export function LocationPicker({
                 </View>
               )}
             </View>
+
+            {selectedLocation && (
+              <View style={styles.selectedLocationContainer}>
+                <Ionicons name="location" size={24} color="#fff" />
+                <View style={styles.selectedLocationInfo}>
+                  <Text style={styles.selectedLocationLabel}>
+                    Ubicación seleccionada
+                  </Text>
+                  <Text style={styles.selectedLocationAddress} numberOfLines={2}>
+                    {selectedLocation.address}
+                  </Text>
+                </View>
+              </View>
+            )}
 
             <View style={styles.addressInputContainer}>
               <Text style={styles.addressLabel}>Dirección</Text>
@@ -234,7 +363,7 @@ export function LocationPicker({
             </View>
 
             <Text style={styles.helpText}>
-              Usa el botón de ubicación para tu posición actual, o busca una dirección
+              Toca en el mapa para seleccionar una ubicación o usa la barra de búsqueda
             </Text>
           </View>
         </View>
@@ -344,6 +473,29 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  selectedLocationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#111',
+    borderRadius: 12,
+  },
+  selectedLocationInfo: {
+    flex: 1,
+  },
+  selectedLocationLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 2,
+  },
+  selectedLocationAddress: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
   },
   addressInputContainer: {
     marginHorizontal: 16,
