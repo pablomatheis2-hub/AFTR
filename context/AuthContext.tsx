@@ -8,6 +8,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  userLoading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(false);
   const appState = useRef(AppState.currentState);
 
   const fetchUser = async (userId: string) => {
@@ -55,9 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setSession(session);
         if (session?.user?.id) {
+          setUserLoading(true);
           const userData = await fetchUser(session.user.id);
           if (isMounted) {
             setUser(userData);
+            setUserLoading(false);
           }
         }
       } finally {
@@ -77,12 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setSession(session);
         if (session?.user?.id) {
+          setUserLoading(true);
           const userData = await fetchUser(session.user.id);
           if (isMounted) {
             setUser(userData);
+            setUserLoading(false);
           }
         } else {
           setUser(null);
+          setUserLoading(false);
         }
       }
     );
@@ -173,6 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user,
         loading,
+        userLoading,
         signUp,
         signIn,
         signOut,
