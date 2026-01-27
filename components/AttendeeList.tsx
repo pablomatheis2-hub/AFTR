@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Linking } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Linking, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { User } from '@/types/database';
+import { getInstagramUrl } from '@/lib/utils';
 
 interface AttendeeListProps {
   attendees: User[];
@@ -9,11 +10,18 @@ interface AttendeeListProps {
 }
 
 export function AttendeeList({ attendees, maxDisplay = 20 }: AttendeeListProps) {
-  const displayedAttendees = attendees.slice(0, maxDisplay);
+  const displayedAttendees = useMemo(() => attendees.slice(0, maxDisplay), [attendees, maxDisplay]);
   const remainingCount = attendees.length - maxDisplay;
 
-  const openInstagram = (handle: string) => {
-    Linking.openURL(`https://instagram.com/${handle}`);
+  const openInstagram = (handle: string | null | undefined) => {
+    const url = getInstagramUrl(handle);
+    if (!url) return;
+
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+    } else {
+      Linking.openURL(url);
+    }
   };
 
   if (attendees.length === 0) {

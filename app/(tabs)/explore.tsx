@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import { Party, User, Event } from '@/types/database';
 import { PartyCard } from '@/components/PartyCard';
 import { useAuth } from '@/context/AuthContext';
+import { calculateGenderCounts } from '@/lib/utils';
 
 type PartyWithDetails = Party & {
   host: User;
@@ -30,10 +31,12 @@ export default function ExploreScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   const fetchParties = async () => {
     try {
+      setError(null);
       let query = supabase
         .from('parties')
         .select(`
@@ -48,44 +51,58 @@ export default function ExploreScreen() {
         query = query.eq('type', filter);
       }
 
-      const { data, error } = await query;
+      const { data, error: partiesError } = await query;
 
-      if (error) {
-        console.error('Error fetching parties:', error);
-        return;
-      }
+      if (partiesError) throw partiesError;
 
       // Filter out parties with inactive events
-      const activeParties = (data || []).filter((party: any) => 
+      const activeParties = (data || []).filter((party: any) =>
         party.event && party.event.is_active
       );
 
-      const partiesWithCounts = await Promise.all(
-        activeParties.map(async (party: any) => {
-          const { data: attendees } = await supabase
-            .from('party_attendees')
-            .select('user:users!user_id(gender)')
-            .eq('party_id', party.id);
+      if (activeParties.length === 0) {
+        setParties([]);
+        return;
+      }
 
-          const maleCount = attendees?.filter((a: any) => a.user?.gender === 'male').length || 0;
-          const femaleCount = attendees?.filter((a: any) => a.user?.gender === 'female').length || 0;
+      // Fetch all attendees for active parties in ONE query
+      const partyIds = activeParties.map((p: any) => p.id);
+      const { data: allAttendees, error: attendeesError } = await supabase
+        .from('party_attendees')
+        .select('party_id, user:users!user_id(gender)')
+        .in('party_id', partyIds);
 
-          return {
-            ...party,
-            attendee_count: attendees?.length || 0,
-            male_count: maleCount,
-            female_count: femaleCount,
-          };
-        })
-      );
+      if (attendeesError) throw attendeesError;
+
+      // Group attendees by party
+      const attendeesByParty = new Map<string, Array<{ user?: { gender?: string } | null }>>();
+      for (const attendee of allAttendees || []) {
+        const list = attendeesByParty.get(attendee.party_id) || [];
+        list.push(attendee);
+        attendeesByParty.set(attendee.party_id, list);
+      }
+
+      // Map parties with counts
+      const partiesWithCounts = activeParties.map((party: any) => {
+        const attendees = attendeesByParty.get(party.id) || [];
+        const counts = calculateGenderCounts(attendees);
+        return {
+          ...party,
+          attendee_count: counts.total,
+          male_count: counts.male,
+          female_count: counts.female,
+        };
+      });
 
       setParties(partiesWithCounts);
     } catch (err) {
       console.error('Error in fetchParties:', err);
+      setError('No se pudieron cargar las fiestas');
     }
   };
 
   useEffect(() => {
+    setLoading(true);
     fetchParties().finally(() => setLoading(false));
   }, [filter]);
 
@@ -137,6 +154,18 @@ export default function ExploreScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#888" />
+        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorRetry} onPress={onRefresh}>
+          Toca para reintentar
+        </Text>
       </View>
     );
   }
@@ -250,5 +279,17 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 16,
     fontWeight: '700',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#888',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  errorRetry: {
+    fontSize: 14,
+    color: '#fff',
+    marginTop: 12,
+    textDecorationLine: 'underline',
   },
 });

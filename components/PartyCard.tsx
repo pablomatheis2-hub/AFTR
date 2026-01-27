@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Party, User } from '@/types/database';
+import { formatDate, formatTime } from '@/lib/utils';
 
 interface PartyCardProps {
   party: Party & {
@@ -15,17 +16,7 @@ interface PartyCardProps {
   eventTitle?: string;
 }
 
-export function PartyCard({ party, onPress, showEvent, eventTitle }: PartyCardProps) {
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', { weekday: 'short', month: 'short', day: 'numeric' });
-  };
-
+export const PartyCard = memo(function PartyCard({ party, onPress, showEvent, eventTitle }: PartyCardProps) {
   const attendeeCount = party.attendee_count || 0;
   const maleCount = party.male_count || 0;
   const femaleCount = party.female_count || 0;
@@ -124,7 +115,7 @@ export function PartyCard({ party, onPress, showEvent, eventTitle }: PartyCardPr
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

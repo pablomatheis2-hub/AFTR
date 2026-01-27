@@ -1,25 +1,16 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Event } from '@/types/database';
+import { formatDateParts } from '@/lib/utils';
 
 interface EventCardProps {
   event: Event & { pre_party_count?: number; after_party_count?: number };
   onPress: () => void;
 }
 
-export function EventCard({ event, onPress }: EventCardProps) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      day: date.toLocaleDateString('es-ES', { weekday: 'short' }),
-      date: date.getDate(),
-      month: date.toLocaleDateString('es-ES', { month: 'short' }),
-      time: date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
-    };
-  };
-
-  const dateInfo = formatDate(event.event_date);
+export const EventCard = memo(function EventCard({ event, onPress }: EventCardProps) {
+  const dateInfo = formatDateParts(event.event_date);
   const totalParties = (event.pre_party_count || 0) + (event.after_party_count || 0);
 
   return (
@@ -79,7 +70,7 @@ export function EventCard({ event, onPress }: EventCardProps) {
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Event } from '@/types/database';
 import { EventCard } from '@/components/EventCard';
@@ -21,46 +22,52 @@ export default function EventsScreen() {
   const [events, setEvents] = useState<EventWithCounts[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchEvents = async () => {
-    // Allow events from the past 24 hours (for afters)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
-    const { data: eventsData, error } = await supabase
-      .from('events')
-      .select('*')
-      .eq('is_active', true)
-      .gte('event_date', twentyFourHoursAgo)
-      .order('event_date', { ascending: true });
+    try {
+      setError(null);
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    if (error) {
-      console.error('Error fetching events:', error);
-      return;
-    }
-
-    const eventsWithCounts = await Promise.all(
-      (eventsData || []).map(async (event) => {
-        const { count: preCount } = await supabase
+      // Fetch events and parties in parallel (2 queries instead of 2n+1)
+      const [eventsResult, partiesResult] = await Promise.all([
+        supabase
+          .from('events')
+          .select('*')
+          .eq('is_active', true)
+          .gte('event_date', twentyFourHoursAgo)
+          .order('event_date', { ascending: true }),
+        supabase
           .from('parties')
-          .select('*', { count: 'exact', head: true })
-          .eq('event_id', event.id)
-          .eq('type', 'pre');
+          .select('event_id, type'),
+      ]);
 
-        const { count: afterCount } = await supabase
-          .from('parties')
-          .select('*', { count: 'exact', head: true })
-          .eq('event_id', event.id)
-          .eq('type', 'after');
+      if (eventsResult.error) throw eventsResult.error;
+      if (partiesResult.error) throw partiesResult.error;
 
+      // Count parties per event locally
+      const partyCounts = new Map<string, { pre: number; after: number }>();
+      for (const party of partiesResult.data || []) {
+        const counts = partyCounts.get(party.event_id) || { pre: 0, after: 0 };
+        if (party.type === 'pre') counts.pre++;
+        else if (party.type === 'after') counts.after++;
+        partyCounts.set(party.event_id, counts);
+      }
+
+      const eventsWithCounts = (eventsResult.data || []).map((event) => {
+        const counts = partyCounts.get(event.id) || { pre: 0, after: 0 };
         return {
           ...event,
-          pre_party_count: preCount || 0,
-          after_party_count: afterCount || 0,
+          pre_party_count: counts.pre,
+          after_party_count: counts.after,
         };
-      })
-    );
+      });
 
-    setEvents(eventsWithCounts);
+      setEvents(eventsWithCounts);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError('No se pudieron cargar los eventos');
+    }
   };
 
   useEffect(() => {
@@ -93,6 +100,18 @@ export default function EventsScreen() {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#888" />
+        <Text style={styles.errorText}>{error}</Text>
+        <Text style={styles.errorRetry} onPress={onRefresh}>
+          Toca para reintentar
+        </Text>
       </View>
     );
   }
@@ -169,5 +188,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     color: '#555',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#888',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  errorRetry: {
+    fontSize: 14,
+    color: '#fff',
+    marginTop: 12,
+    textDecorationLine: 'underline',
   },
 });

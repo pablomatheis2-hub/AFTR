@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '@/lib/supabase';
 import { Event, Party, User } from '@/types/database';
 import { PartyCard } from '@/components/PartyCard';
+import { formatFullDate, formatTime, calculateGenderCounts } from '@/lib/utils';
 
 type PartyWithHost = Party & { host: User; attendee_count: number; male_count: number; female_count: number };
 type TabType = 'pre' | 'after';
@@ -22,6 +23,7 @@ export default function EventDetailScreen() {
   const [event, setEvent] = useState<Event | null>(null);
   const [parties, setParties] = useState<PartyWithHost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('pre');
 
   useEffect(() => {
@@ -31,17 +33,15 @@ export default function EventDetailScreen() {
   }, [id]);
 
   const fetchEventData = async () => {
-    const { data: eventData, error: eventError } = await supabase
-      .from('events')
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      setError(null);
+      const { data: eventData, error: eventError } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-    if (eventError) {
-      console.error('Error fetching event:', eventError);
-      setLoading(false);
-      return;
-    }
+      if (eventError) throw eventError;
 
     setEvent(eventData);
 
@@ -51,44 +51,41 @@ export default function EventDetailScreen() {
       .eq('event_id', id)
       .order('start_time', { ascending: true });
 
-    if (!partiesError && partiesData) {
-      const partiesWithCounts = await Promise.all(
-        partiesData.map(async (party: any) => {
-          const { data: attendees } = await supabase
-            .from('party_attendees')
-            .select('user:users!user_id(gender)')
-            .eq('party_id', party.id);
+    if (!partiesError && partiesData && partiesData.length > 0) {
+      // Fetch all attendees for all parties in ONE query
+      const partyIds = partiesData.map((p: any) => p.id);
+      const { data: allAttendees } = await supabase
+        .from('party_attendees')
+        .select('party_id, user:users!user_id(gender)')
+        .in('party_id', partyIds);
 
-          const maleCount = attendees?.filter((a: any) => a.user?.gender === 'male').length || 0;
-          const femaleCount = attendees?.filter((a: any) => a.user?.gender === 'female').length || 0;
+      // Group attendees by party
+      const attendeesByParty = new Map<string, Array<{ user?: { gender?: string } | null }>>();
+      for (const attendee of allAttendees || []) {
+        const list = attendeesByParty.get(attendee.party_id) || [];
+        list.push(attendee);
+        attendeesByParty.set(attendee.party_id, list);
+      }
 
-          return {
-            ...party,
-            attendee_count: attendees?.length || 0,
-            male_count: maleCount,
-            female_count: femaleCount,
-          };
-        })
-      );
+      const partiesWithCounts = partiesData.map((party: any) => {
+        const attendees = attendeesByParty.get(party.id) || [];
+        const counts = calculateGenderCounts(attendees);
+        return {
+          ...party,
+          attendee_count: counts.total,
+          male_count: counts.male,
+          female_count: counts.female,
+        };
+      });
 
       setParties(partiesWithCounts);
     }
-
-    setLoading(false);
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    } catch (err) {
+      console.error('Error fetching event:', err);
+      setError('No se pudo cargar el evento');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredParties = parties.filter((p) => p.type === activeTab);
@@ -106,9 +103,22 @@ export default function EventDetailScreen() {
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Ionicons name="alert-circle-outline" size={48} color="#888" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={fetchEventData}>
+          <Text style={styles.retryText}>Toca para reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!event) {
     return (
       <View style={styles.loadingContainer}>
+        <Ionicons name="calendar-outline" size={48} color="#888" />
         <Text style={styles.errorText}>Evento no encontrado</Text>
       </View>
     );
@@ -143,7 +153,7 @@ export default function EventDetailScreen() {
           <View style={styles.metaContainer}>
             <View style={styles.metaItem}>
               <Ionicons name="calendar-outline" size={18} color="#fff" />
-              <Text style={styles.metaText}>{formatDate(event.event_date)}</Text>
+              <Text style={styles.metaText}>{formatFullDate(event.event_date)}</Text>
             </View>
 
             <View style={styles.metaItem}>
@@ -281,6 +291,14 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: '#888',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  retryText: {
+    fontSize: 14,
+    color: '#fff',
+    marginTop: 12,
+    textDecorationLine: 'underline',
   },
   header: {
     height: 280,

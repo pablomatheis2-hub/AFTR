@@ -11,6 +11,7 @@ import {
   Linking,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { AttendeeList } from '@/components/AttendeeList';
 import { GenderRatio } from '@/components/GenderRatio';
 import { MapViewModal } from '@/components/MapViewModal';
+import { formatFullDate, formatTime, getInstagramUrl } from '@/lib/utils';
 
 type PartyDetail = Party & {
   host: User;
@@ -132,22 +134,19 @@ export default function PartyDetailScreen() {
     setJoiningLeaving(false);
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  };
-
   const maleCount = attendees.filter((a) => a.gender === 'male').length;
   const femaleCount = attendees.filter((a) => a.gender === 'female').length;
+
+  const handleOpenInstagram = (handle: string | null | undefined) => {
+    const url = getInstagramUrl(handle);
+    if (!url) return;
+
+    if (Platform.OS === 'web') {
+      window.open(url, '_blank');
+    } else {
+      Linking.openURL(url);
+    }
+  };
 
   const isHost = session?.user?.id === party?.host_id;
 
@@ -286,10 +285,8 @@ export default function PartyDetailScreen() {
             <View style={styles.hostSection}>
               <TouchableOpacity
                 style={styles.hostCard}
-                onPress={() =>
-                  party.host.instagram_handle &&
-                  Linking.openURL(`https://instagram.com/${party.host.instagram_handle}`)
-                }
+                onPress={() => handleOpenInstagram(party.host.instagram_handle)}
+                disabled={!party.host.instagram_handle}
               >
                 {party.host.avatar_url ? (
                   <Image source={{ uri: party.host.avatar_url }} style={styles.hostAvatar} />
@@ -324,7 +321,7 @@ export default function PartyDetailScreen() {
                   <View>
                     <Text style={styles.detailLabel}>Fecha</Text>
                     <Text style={styles.detailValue}>
-                      {formatDate(party.start_time)}
+                      {formatFullDate(party.start_time)}
                     </Text>
                   </View>
                 </View>

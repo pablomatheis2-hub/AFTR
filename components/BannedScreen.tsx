@@ -13,7 +13,7 @@ export function BannedScreen() {
         Tu acceso a AFTR ha sido suspendido por incumplir nuestras normas de uso.
       </Text>
       <TouchableOpacity style={styles.button} onPress={signOut}>
-        <Text style={styles.buttonText}>Cerrar sesion</Text>
+        <Text style={styles.buttonText}>Cerrar sesión</Text>
       </TouchableOpacity>
     </View>
   );

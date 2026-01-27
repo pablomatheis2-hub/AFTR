@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   TextInput,
   Switch,
   Alert,
+  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -21,10 +22,12 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Party, Event } from '@/types/database';
 import { BottomSheet } from '@/components/BottomSheet';
+import { formatDate } from '@/lib/utils';
 
 type PartyWithEvent = Party & { event: Event };
 
 const RADIUS_OPTIONS = [5, 10, 15, 25, 50, 75, 100];
+const MAX_AVATAR_SIZE_MB = 5;
 
 export default function ProfileScreen() {
   const { user, signOut, updateProfile, refreshUser } = useAuth();
@@ -135,8 +138,14 @@ export default function ProfileScreen() {
     });
 
     if (!result.canceled && result.assets[0]) {
+      const base64 = result.assets[0].base64;
+      // Validate image size (base64 is ~1.33x larger than binary)
+      if (base64 && base64.length > MAX_AVATAR_SIZE_MB * 1024 * 1024 * 1.33) {
+        Alert.alert('Imagen muy grande', `La imagen debe ser menor a ${MAX_AVATAR_SIZE_MB}MB`);
+        return;
+      }
       setEditAvatarUri(result.assets[0].uri);
-      setEditAvatarBase64(result.assets[0].base64 || null);
+      setEditAvatarBase64(base64 || null);
     }
   };
 
@@ -217,7 +226,11 @@ export default function ProfileScreen() {
     router.replace('/(auth)/login');
   };
 
-  const formatDate = (dateString: string) => {
+  // Memoize sliced arrays to prevent re-renders
+  const displayedHostedParties = useMemo(() => hostedParties.slice(0, 3), [hostedParties]);
+  const displayedJoinedParties = useMemo(() => joinedParties.slice(0, 3), [joinedParties]);
+
+  const formatPartyDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
       month: 'short',
@@ -243,7 +256,7 @@ export default function ProfileScreen() {
           {party.title}
         </Text>
         <Text style={styles.partyEvent} numberOfLines={1}>
-          {party.event?.title} - {formatDate(party.start_time)}
+          {party.event?.title} - {formatPartyDate(party.start_time)}
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={18} color="#555" />
@@ -367,7 +380,7 @@ export default function ProfileScreen() {
               Tus Fiestas ({hostedParties.length})
             </Text>
             <View style={styles.partiesList}>
-              {hostedParties.slice(0, 3).map(renderPartyItem)}
+              {displayedHostedParties.map(renderPartyItem)}
               {hostedParties.length > 3 && (
                 <TouchableOpacity style={styles.showMore}>
                   <Text style={styles.showMoreText}>
@@ -385,7 +398,7 @@ export default function ProfileScreen() {
               Fiestas Unidas ({joinedParties.length})
             </Text>
             <View style={styles.partiesList}>
-              {joinedParties.slice(0, 3).map(renderPartyItem)}
+              {displayedJoinedParties.map(renderPartyItem)}
               {joinedParties.length > 3 && (
                 <TouchableOpacity style={styles.showMore}>
                   <Text style={styles.showMoreText}>
