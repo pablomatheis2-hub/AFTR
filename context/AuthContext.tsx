@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { Platform, AppState, AppStateStatus } from 'react-native';
 import { Session, AuthChangeEvent } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types/database';
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const appState = useRef(AppState.currentState);
 
   const fetchUser = async (userId: string) => {
     const { data, error } = await supabase
@@ -91,6 +92,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Refresh user data when app comes back to foreground
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        if (session?.user?.id) {
+          refreshUser();
+        }
+      }
+      appState.current = nextAppState;
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription.remove();
+  }, [session?.user?.id]);
 
   const signUp = async (email: string, password: string) => {
     const isWeb = typeof window !== 'undefined' && Platform.OS === 'web';

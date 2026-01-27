@@ -23,11 +23,14 @@ export default function EventsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchEvents = async () => {
+    // Allow events from the past 24 hours (for afters)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
     const { data: eventsData, error } = await supabase
       .from('events')
       .select('*')
       .eq('is_active', true)
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', twentyFourHoursAgo)
       .order('event_date', { ascending: true });
 
     if (error) {

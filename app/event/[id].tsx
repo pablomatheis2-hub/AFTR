@@ -94,6 +94,9 @@ export default function EventDetailScreen() {
   const filteredParties = parties.filter((p) => p.type === activeTab);
   const prePartiesCount = parties.filter((p) => p.type === 'pre').length;
   const afterPartiesCount = parties.filter((p) => p.type === 'after').length;
+  
+  // Check if event is more than 24 hours in the past
+  const isEventTooOld = event ? new Date(event.event_date) < new Date(Date.now() - 24 * 60 * 60 * 1000) : false;
 
   if (loading) {
     return (
@@ -203,23 +206,31 @@ export default function EventDetailScreen() {
                 <Text style={styles.emptyTitle}>
                   No hay {activeTab === 'pre' ? 'previas' : 'afters'} aún
                 </Text>
-                <Text style={styles.emptySubtitle}>
-                  ¡Sé el primero en organizar una!
-                </Text>
-                <TouchableOpacity
-                  style={styles.createButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/(tabs)/create',
-                      params: { eventId: event.id, partyType: activeTab },
-                    })
-                  }
-                >
-                  <Ionicons name="add" size={20} color="#000" />
-                  <Text style={styles.createButtonText}>
-                    Crear {activeTab === 'pre' ? 'Previa' : 'After'}
+                {isEventTooOld ? (
+                  <Text style={styles.emptySubtitle}>
+                    Este evento ya pasó hace más de 24 horas
                   </Text>
-                </TouchableOpacity>
+                ) : (
+                  <>
+                    <Text style={styles.emptySubtitle}>
+                      ¡Sé el primero en organizar una!
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.createButton}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/(tabs)/create',
+                          params: { eventId: event.id, partyType: activeTab },
+                        })
+                      }
+                    >
+                      <Ionicons name="add" size={20} color="#000" />
+                      <Text style={styles.createButtonText}>
+                        Crear {activeTab === 'pre' ? 'Previa' : 'After'}
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
               </View>
             ) : (
               <View style={styles.partiesList}>
@@ -231,20 +242,22 @@ export default function EventDetailScreen() {
                   />
                 ))}
 
-                <TouchableOpacity
-                  style={styles.hostPartyButton}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/(tabs)/create',
-                      params: { eventId: event.id, partyType: activeTab },
-                    })
-                  }
-                >
-                  <Ionicons name="add-circle-outline" size={20} color="#000" />
-                  <Text style={styles.hostPartyButtonText}>
-                    Organizar {activeTab === 'pre' ? 'Previa' : 'After'}
-                  </Text>
-                </TouchableOpacity>
+                {!isEventTooOld && (
+                  <TouchableOpacity
+                    style={styles.hostPartyButton}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(tabs)/create',
+                        params: { eventId: event.id, partyType: activeTab },
+                      })
+                    }
+                  >
+                    <Ionicons name="add-circle-outline" size={20} color="#000" />
+                    <Text style={styles.hostPartyButtonText}>
+                      Organizar {activeTab === 'pre' ? 'Previa' : 'After'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>

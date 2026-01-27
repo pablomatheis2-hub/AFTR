@@ -56,11 +56,14 @@ export default function CreatePartyScreen() {
   }, [params.eventId, events]);
 
   const fetchEvents = async () => {
+    // Allow events from the past 24 hours (for afters)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    
     const { data, error } = await supabase
       .from('events')
       .select('*')
       .eq('is_active', true)
-      .gte('event_date', new Date().toISOString())
+      .gte('event_date', twentyFourHoursAgo)
       .order('event_date', { ascending: true });
 
     if (!error && data) {
@@ -77,6 +80,14 @@ export default function CreatePartyScreen() {
 
     if (!selectedEvent) {
       Alert.alert('Error', 'Por favor selecciona un evento');
+      return;
+    }
+
+    // Check if event is more than 24 hours in the past
+    const eventDate = new Date(selectedEvent.event_date);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    if (eventDate < twentyFourHoursAgo) {
+      Alert.alert('Error', 'No puedes crear fiestas para eventos de hace más de 24 horas');
       return;
     }
 

@@ -105,6 +105,15 @@ create policy "Users can update own profile"
   on public.users for update
   using (auth.uid() = id);
 
+create policy "Admins can update any user"
+  on public.users for update
+  using (
+    exists (
+      select 1 from public.users
+      where users.id = auth.uid() and users.is_admin = true
+    )
+  );
+
 create policy "Users can insert own profile"
   on public.users for insert
   with check (auth.uid() = id);

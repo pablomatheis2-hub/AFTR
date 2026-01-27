@@ -71,6 +71,17 @@ export default function AdminUsers() {
     }
   };
 
+  const toggleBan = async (userId: string, currentStatus: boolean) => {
+    const { error } = await supabase
+      .from('users')
+      .update({ is_banned: !currentStatus })
+      .eq('id', userId);
+
+    if (!error) {
+      setUsers(users.map((u) => (u.id === userId ? { ...u, is_banned: !currentStatus } : u)));
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       day: 'numeric',
@@ -162,32 +173,45 @@ export default function AdminUsers() {
                   <View
                     style={[
                       styles.statusBadge,
-                      user.onboarding_complete ? styles.statusComplete : styles.statusPending,
+                      user.is_banned ? styles.statusBanned : user.onboarding_complete ? styles.statusComplete : styles.statusPending,
                     ]}
                   >
                     <Text
                       style={[
                         styles.statusText,
-                        user.onboarding_complete ? styles.statusTextComplete : styles.statusTextPending,
+                        user.is_banned ? styles.statusTextBanned : user.onboarding_complete ? styles.statusTextComplete : styles.statusTextPending,
                       ]}
                     >
-                      {user.onboarding_complete ? 'Completo' : 'Pendiente'}
+                      {user.is_banned ? 'Baneado' : user.onboarding_complete ? 'Completo' : 'Pendiente'}
                     </Text>
                   </View>
 
-                  <TouchableOpacity
-                    style={[styles.adminButton, user.is_admin && styles.adminButtonActive]}
-                    onPress={() => toggleAdmin(user.id, user.is_admin)}
-                  >
-                    <Ionicons
-                      name={user.is_admin ? 'shield-checkmark' : 'shield-outline'}
-                      size={16}
-                      color={user.is_admin ? '#a855f7' : '#888'}
-                    />
-                    <Text style={[styles.adminButtonText, user.is_admin && styles.adminButtonTextActive]}>
-                      {user.is_admin ? 'Admin' : 'Usuario'}
-                    </Text>
-                  </TouchableOpacity>
+                  <View style={styles.actionButtons}>
+                    <TouchableOpacity
+                      style={[styles.banButton, user.is_banned && styles.banButtonActive]}
+                      onPress={() => toggleBan(user.id, user.is_banned)}
+                    >
+                      <Ionicons
+                        name={user.is_banned ? 'ban' : 'checkmark-circle-outline'}
+                        size={16}
+                        color={user.is_banned ? '#ef4444' : '#22c55e'}
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.adminButton, user.is_admin && styles.adminButtonActive]}
+                      onPress={() => toggleAdmin(user.id, user.is_admin)}
+                    >
+                      <Ionicons
+                        name={user.is_admin ? 'shield-checkmark' : 'shield-outline'}
+                        size={16}
+                        color={user.is_admin ? '#a855f7' : '#888'}
+                      />
+                      <Text style={[styles.adminButtonText, user.is_admin && styles.adminButtonTextActive]}>
+                        {user.is_admin ? 'Admin' : 'Usuario'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))}
@@ -337,6 +361,9 @@ const styles = StyleSheet.create({
   statusPending: {
     backgroundColor: '#f59e0b20',
   },
+  statusBanned: {
+    backgroundColor: '#ef444420',
+  },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
@@ -346,6 +373,25 @@ const styles = StyleSheet.create({
   },
   statusTextPending: {
     color: '#f59e0b',
+  },
+  statusTextBanned: {
+    color: '#ef4444',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  banButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#22c55e20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  banButtonActive: {
+    backgroundColor: '#ef444420',
   },
   adminButton: {
     flexDirection: 'row',

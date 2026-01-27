@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { WebContainer } from '@/components/WebContainer';
 import { LoadingScreen } from '@/components/LoadingScreen';
+import { BannedScreen } from '@/components/BannedScreen';
 
 export {
   ErrorBoundary,
@@ -66,6 +67,17 @@ function RootLayoutNav() {
       <ThemeProvider value={beRealTheme}>
         <WebContainer>
           <LoadingScreen />
+        </WebContainer>
+      </ThemeProvider>
+    );
+  }
+
+  // Show banned screen if user is banned
+  if (user?.is_banned) {
+    return (
+      <ThemeProvider value={beRealTheme}>
+        <WebContainer>
+          <BannedScreen />
         </WebContainer>
       </ThemeProvider>
     );

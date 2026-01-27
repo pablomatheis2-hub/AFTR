@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -26,7 +27,7 @@ type PartyWithEvent = Party & { event: Event };
 const RADIUS_OPTIONS = [5, 10, 15, 25, 50, 75, 100];
 
 export default function ProfileScreen() {
-  const { user, signOut, updateProfile } = useAuth();
+  const { user, signOut, updateProfile, refreshUser } = useAuth();
   const [hostedParties, setHostedParties] = useState<PartyWithEvent[]>([]);
   const [joinedParties, setJoinedParties] = useState<PartyWithEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +60,13 @@ export default function ProfileScreen() {
   useEffect(() => {
     loadNotificationPreferences();
   }, []);
+
+  // Refresh user data when screen is focused to get latest admin/ban status
+  useFocusEffect(
+    useCallback(() => {
+      refreshUser();
+    }, [])
+  );
 
   const loadNotificationPreferences = async () => {
     try {
