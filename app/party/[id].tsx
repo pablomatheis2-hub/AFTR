@@ -49,6 +49,24 @@ export default function PartyDetailScreen() {
     }
   }, [id]);
 
+  const [showAppBanner, setShowAppBanner] = useState(false);
+
+  // On mobile web, show "Open in App" banner
+  useEffect(() => {
+    if (Platform.OS === 'web' && id) {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        setShowAppBanner(true);
+      }
+    }
+  }, [id]);
+
+  const handleOpenInApp = () => {
+    if (id) {
+      window.location.href = `aftr://party/${id}`;
+    }
+  };
+
   const fetchPartyData = async () => {
     const { data: partyData, error: partyError } = await supabase
       .from('parties')
@@ -222,15 +240,12 @@ export default function PartyDetailScreen() {
     const eventName = party.event?.title || '';
     const dateStr = formatFullDate(party.start_time);
     const timeStr = formatTime(party.start_time);
+    const hostName = party.host?.full_name || '';
     
-    const deepLink = `aftr://party/${party.id}`;
-    
-    const message = `${party.title}
-
+    const message = `${partyType === 'previa' ? 'Previa' : 'After'}: ${party.title}
 ${eventName ? `${eventName}\n` : ''}${dateStr} a las ${timeStr}
-
-Descarga AFTR y unete a mi ${partyType}:
-${deepLink}`;
+${hostName ? `Host: ${hostName}\n` : ''}
+https://aftr.es/party/${party.id}`;
 
     try {
       await Share.share({
@@ -267,24 +282,15 @@ ${deepLink}`;
           headerBackTitle: 'Atrás',
           headerStyle: { backgroundColor: '#000' },
           headerTintColor: '#fff',
-          headerRight: () => (
-            <View style={styles.headerRightContainer}>
+          headerRight: () =>
+            !isHost && session?.user?.id ? (
               <TouchableOpacity
-                onPress={handleShare}
+                onPress={() => setShowReportModal(true)}
                 style={styles.headerButton}
               >
-                <Ionicons name="share-outline" size={22} color="#fff" />
+                <Ionicons name="flag-outline" size={22} color="#888" />
               </TouchableOpacity>
-              {!isHost && session?.user?.id && (
-                <TouchableOpacity
-                  onPress={() => setShowReportModal(true)}
-                  style={styles.headerButton}
-                >
-                  <Ionicons name="flag-outline" size={22} color="#888" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ),
+            ) : null,
         }}
       />
       <View style={styles.container}>
@@ -303,8 +309,26 @@ ${deepLink}`;
             </Text>
           </View>
 
+          {showAppBanner && (
+            <TouchableOpacity style={styles.appBanner} onPress={handleOpenInApp}>
+              <View style={styles.appBannerContent}>
+                <Ionicons name="phone-portrait-outline" size={20} color="#fff" />
+                <Text style={styles.appBannerText}>Abrir en la app</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#888" />
+            </TouchableOpacity>
+          )}
+
           <View style={styles.content}>
-            <Text style={styles.title}>{party.title}</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>{party.title}</Text>
+              <TouchableOpacity
+                onPress={handleShare}
+                style={styles.shareButton}
+              >
+                <Ionicons name="share-outline" size={22} color="#fff" />
+              </TouchableOpacity>
+            </View>
 
             {party.event && (
               <TouchableOpacity
@@ -588,15 +612,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  appBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#1a1a1a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#262626',
+  },
+  appBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  appBannerText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   content: {
     padding: 20,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 12,
+  },
   title: {
+    flex: 1,
     fontSize: 28,
     fontWeight: '800',
-    marginBottom: 12,
     color: '#fff',
     letterSpacing: 0.5,
+  },
+  shareButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1a1a1a',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   eventBadge: {
     flexDirection: 'row',
@@ -769,11 +828,6 @@ const styles = StyleSheet.create({
     color: '#ff3b30',
     fontSize: 17,
     fontWeight: '700',
-  },
-  headerRightContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
   },
   headerButton: {
     padding: 8,
