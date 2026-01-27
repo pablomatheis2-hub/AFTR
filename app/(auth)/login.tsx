@@ -11,18 +11,16 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
-import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const { signIn } = useAuth();
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'dark'];
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -51,51 +49,60 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Correo electrónico"
-            placeholderTextColor="#555"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[styles.input, emailFocused && styles.inputFocused]}
+              placeholder="Correo electrónico"
+              placeholderTextColor="#666"
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+            />
+          </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Contraseña"
-            placeholderTextColor="#555"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            autoCapitalize="none"
-          />
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[styles.input, passwordFocused && styles.inputFocused]}
+              placeholder="Contrasena"
+              placeholderTextColor="#666"
+              value={password}
+              onChangeText={setPassword}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
+              secureTextEntry
+              autoCapitalize="none"
+            />
+          </View>
 
           <Link href="/(auth)/forgot-password" asChild>
             <TouchableOpacity style={styles.forgotPassword}>
-              <Text style={styles.forgotPasswordText}>¿Olvidaste tu contraseña?</Text>
+              <Text style={styles.forgotPasswordText}>Olvidaste tu contrasena?</Text>
             </TouchableOpacity>
           </Link>
 
           <TouchableOpacity
-            style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
+            activeOpacity={0.8}
           >
             {loading ? (
               <ActivityIndicator color="#000" />
             ) : (
-              <Text style={styles.buttonText}>Iniciar Sesión</Text>
+              <Text style={styles.buttonText}>Iniciar Sesion</Text>
             )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>¿No tienes cuenta? </Text>
+          <Text style={styles.footerText}>No tienes cuenta? </Text>
           <Link href="/(auth)/register" asChild>
-            <TouchableOpacity>
-              <Text style={styles.footerLink}>Regístrate</Text>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.footerLink}>Registrate</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -111,68 +118,82 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 28,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 40,
   },
   logoImage: {
-    width: 150,
-    height: 150,
+    width: 120,
+    height: 120,
     resizeMode: 'contain',
   },
   tagline: {
-    fontSize: 16,
-    marginTop: 8,
-    letterSpacing: 3,
-    color: '#888',
+    fontSize: 15,
+    marginTop: 16,
+    color: '#666',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   form: {
-    gap: 16,
+    gap: 14,
+  },
+  inputWrapper: {
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   input: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1a1a1a',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     fontSize: 16,
     color: '#fff',
   },
+  inputFocused: {
+    borderColor: '#333',
+  },
   forgotPassword: {
     alignSelf: 'flex-end',
+    paddingVertical: 4,
   },
   forgotPasswordText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#888',
+    fontWeight: '500',
+    color: '#666',
   },
   button: {
     backgroundColor: '#fff',
-    borderRadius: 30,
-    height: 56,
+    borderRadius: 14,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 6,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#000',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 32,
+    marginTop: 28,
   },
   footerText: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 15,
+    color: '#666',
   },
   footerLink: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#fff',
   },
 });

@@ -12,6 +12,7 @@ import {
   Modal,
   TextInput,
   Platform,
+  Share,
 } from 'react-native';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -214,6 +215,33 @@ export default function PartyDetailScreen() {
     { value: 'other', label: 'Otro' },
   ];
 
+  const handleShare = async () => {
+    if (!party) return;
+
+    const partyType = party.type === 'pre' ? 'previa' : 'after';
+    const eventName = party.event?.title || '';
+    const dateStr = formatFullDate(party.start_time);
+    const timeStr = formatTime(party.start_time);
+    
+    const deepLink = `aftr://party/${party.id}`;
+    
+    const message = `${party.title}
+
+${eventName ? `${eventName}\n` : ''}${dateStr} a las ${timeStr}
+
+Descarga AFTR y unete a mi ${partyType}:
+${deepLink}`;
+
+    try {
+      await Share.share({
+        message,
+        title: `Unete a mi ${partyType}`,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -239,15 +267,24 @@ export default function PartyDetailScreen() {
           headerBackTitle: 'Atrás',
           headerStyle: { backgroundColor: '#000' },
           headerTintColor: '#fff',
-          headerRight: () =>
-            !isHost && session?.user?.id ? (
+          headerRight: () => (
+            <View style={styles.headerRightContainer}>
               <TouchableOpacity
-                onPress={() => setShowReportModal(true)}
-                style={styles.reportHeaderButton}
+                onPress={handleShare}
+                style={styles.headerButton}
               >
-                <Ionicons name="flag-outline" size={22} color="#888" />
+                <Ionicons name="share-outline" size={22} color="#fff" />
               </TouchableOpacity>
-            ) : null,
+              {!isHost && session?.user?.id && (
+                <TouchableOpacity
+                  onPress={() => setShowReportModal(true)}
+                  style={styles.headerButton}
+                >
+                  <Ionicons name="flag-outline" size={22} color="#888" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ),
         }}
       />
       <View style={styles.container}>
@@ -733,7 +770,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
   },
-  reportHeaderButton: {
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  headerButton: {
     padding: 8,
   },
   modalOverlay: {

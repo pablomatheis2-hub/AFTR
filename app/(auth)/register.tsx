@@ -19,6 +19,9 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmFocused, setConfirmFocused] = useState(false);
   const { signUp } = useAuth();
 
   const handleRegister = async () => {
@@ -28,12 +31,12 @@ export default function RegisterScreen() {
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      Alert.alert('Error', 'Las contrasenas no coinciden');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      Alert.alert('Error', 'La contrasena debe tener al menos 6 caracteres');
       return;
     }
 
@@ -46,7 +49,7 @@ export default function RegisterScreen() {
     } else {
       Alert.alert(
         'Revisa tu correo',
-        'Te enviamos un enlace de confirmación. Por favor verifica tu correo para continuar.',
+        'Te enviamos un enlace de confirmacion. Por favor verifica tu correo para continuar.',
         [{ text: 'OK', onPress: () => router.replace('/(auth)/login') }]
       );
     }
@@ -61,54 +64,62 @@ export default function RegisterScreen() {
         <ScrollView
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
             <Text style={styles.title}>Crear Cuenta</Text>
-            <Text style={styles.subtitle}>Únete a la escena fiestera</Text>
+            <Text style={styles.subtitle}>Unete a la escena</Text>
           </View>
 
           <View style={styles.form}>
             <TextInput
-              style={styles.input}
-              placeholder="Correo electrónico"
-              placeholderTextColor="#555"
+              style={[styles.input, emailFocused && styles.inputFocused]}
+              placeholder="Correo electronico"
+              placeholderTextColor="#666"
               value={email}
               onChangeText={setEmail}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
             />
 
             <TextInput
-              style={styles.input}
-              placeholder="Contraseña"
-              placeholderTextColor="#555"
+              style={[styles.input, passwordFocused && styles.inputFocused]}
+              placeholder="Contrasena"
+              placeholderTextColor="#666"
               value={password}
               onChangeText={setPassword}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => setPasswordFocused(false)}
               secureTextEntry
               autoCapitalize="none"
             />
 
             <TextInput
-              style={styles.input}
-              placeholder="Confirmar Contraseña"
-              placeholderTextColor="#555"
+              style={[styles.input, confirmFocused && styles.inputFocused]}
+              placeholder="Confirmar contrasena"
+              placeholderTextColor="#666"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
+              onFocus={() => setConfirmFocused(true)}
+              onBlur={() => setConfirmFocused(false)}
               secureTextEntry
               autoCapitalize="none"
             />
 
             <Text style={styles.terms}>
               Al registrarte, aceptas nuestros{' '}
-              <Text style={styles.termsLink}>Términos de Servicio</Text> y{' '}
-              <Text style={styles.termsLink}>Política de Privacidad</Text>
+              <Text style={styles.termsLink}>Terminos de Servicio</Text> y{' '}
+              <Text style={styles.termsLink}>Politica de Privacidad</Text>
             </Text>
 
             <TouchableOpacity
-              style={[styles.button, { opacity: loading ? 0.7 : 1 }]}
+              style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleRegister}
               disabled={loading}
+              activeOpacity={0.8}
             >
               {loading ? (
                 <ActivityIndicator color="#000" />
@@ -119,10 +130,10 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
+            <Text style={styles.footerText}>Ya tienes cuenta? </Text>
             <Link href="/(auth)/login" asChild>
-              <TouchableOpacity>
-                <Text style={styles.footerLink}>Inicia Sesión</Text>
+              <TouchableOpacity activeOpacity={0.7}>
+                <Text style={styles.footerLink}>Inicia Sesion</Text>
               </TouchableOpacity>
             </Link>
           </View>
@@ -142,42 +153,46 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: 28,
     justifyContent: 'center',
     paddingVertical: 48,
   },
   header: {
-    marginBottom: 40,
+    marginBottom: 32,
   },
   title: {
-    fontSize: 36,
-    fontWeight: '800',
-    letterSpacing: 1,
+    fontSize: 32,
+    fontWeight: '700',
     color: '#fff',
   },
   subtitle: {
-    fontSize: 18,
-    marginTop: 8,
-    color: '#888',
-    letterSpacing: 0.5,
+    fontSize: 16,
+    marginTop: 6,
+    color: '#666',
+    fontWeight: '500',
   },
   form: {
-    gap: 16,
+    gap: 14,
   },
   input: {
-    backgroundColor: '#111',
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#1a1a1a',
+    paddingHorizontal: 18,
+    paddingVertical: 16,
     fontSize: 16,
     color: '#fff',
   },
+  inputFocused: {
+    borderColor: '#333',
+  },
   terms: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 19,
     textAlign: 'center',
     marginVertical: 8,
-    color: '#888',
+    color: '#666',
   },
   termsLink: {
     color: '#fff',
@@ -185,29 +200,32 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#fff',
-    borderRadius: 30,
-    height: 56,
+    borderRadius: 14,
+    height: 54,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    marginTop: 6,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: '#000',
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 32,
+    marginTop: 28,
   },
   footerText: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 15,
+    color: '#666',
   },
   footerLink: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#fff',
   },
 });
