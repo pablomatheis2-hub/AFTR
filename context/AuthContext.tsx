@@ -59,8 +59,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let active = true;
 
     const init = async () => {
+      // Timeout to prevent infinite loading if Supabase is slow
+      const timeout = setTimeout(() => {
+        if (active) {
+          console.warn('Auth initialization timed out');
+          setLoading(false);
+        }
+      }, 10000);
+
       try {
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        clearTimeout(timeout);
         if (!active) return;
 
         setSession(currentSession);
@@ -70,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         setLoading(false);
       } catch (error) {
+        clearTimeout(timeout);
         // Ignore AbortError - happens during component remount in React 19
         if (error instanceof Error && error.name === 'AbortError') {
           return;
