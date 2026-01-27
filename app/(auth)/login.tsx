@@ -47,7 +47,7 @@ export default function LoginScreen() {
       >
         <View style={styles.header}>
           <Image source={require('@/assets/images/logo.png')} style={styles.logoImage} />
-          <Text style={styles.tagline}>Conecta. Fiesta. Repite.</Text>
+          <Text style={styles.tagline}>Todo empieza antes de entrar al club</Text>
         </View>
 
         <View style={styles.form}>
