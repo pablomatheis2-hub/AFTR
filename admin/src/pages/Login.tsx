@@ -20,7 +20,7 @@ export default function Login({ onLogin }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="AFTR" className="w-32 h-32 mx-auto mb-4" />
@@ -29,7 +29,7 @@ export default function Login({ onLogin }: LoginProps) {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-[#1a1a2e] rounded-2xl p-8 border border-[#2d2d44]"
+          className="bg-[#0a0a0a] rounded-2xl p-8 border border-[#262626]"
         >
           <div className="space-y-6">
             <div>
@@ -40,7 +40,7 @@ export default function Login({ onLogin }: LoginProps) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white transition-colors"
                 placeholder="Ingresa tu usuario"
                 required
               />
@@ -54,7 +54,7 @@ export default function Login({ onLogin }: LoginProps) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-colors"
+                className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white transition-colors"
                 placeholder="Ingresa tu contraseña"
                 required
               />
@@ -68,7 +68,7 @@ export default function Login({ onLogin }: LoginProps) {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+              className="w-full py-3 px-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition-colors"
             >
               Iniciar Sesión
             </button>

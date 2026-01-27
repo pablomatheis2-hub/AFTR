@@ -119,7 +119,7 @@ export default function Events() {
         </div>
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition-colors"
         >
           <Plus size={20} />
           Agregar Evento
@@ -128,17 +128,17 @@ export default function Events() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-12 bg-[#1a1a2e] rounded-2xl border border-[#2d2d44]">
+        <div className="text-center py-12 bg-[#0a0a0a] rounded-2xl border border-[#262626]">
           <p className="text-gray-400">No hay eventos. Crea tu primer evento.</p>
         </div>
       ) : (
-        <div className="bg-[#1a1a2e] rounded-2xl border border-[#2d2d44] overflow-hidden">
+        <div className="bg-[#0a0a0a] rounded-2xl border border-[#262626] overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#2d2d44]">
+              <tr className="border-b border-[#262626]">
                 <th className="text-left p-4 text-gray-400 font-medium">Evento</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Lugar</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Fecha</th>
@@ -148,7 +148,7 @@ export default function Events() {
             </thead>
             <tbody>
               {events.map((event) => (
-                <tr key={event.id} className="border-b border-[#2d2d44] last:border-0">
+                <tr key={event.id} className="border-b border-[#262626] last:border-0">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       {event.image_url ? (
@@ -158,7 +158,7 @@ export default function Events() {
                           className="w-12 h-12 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500" />
+                        <div className="w-12 h-12 rounded-lg bg-[#262626]" />
                       )}
                       <span className="text-white font-medium">{event.title}</span>
                     </div>
@@ -180,7 +180,7 @@ export default function Events() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => openEditModal(event)}
-                        className="p-2 text-gray-400 hover:text-white hover:bg-[#252538] rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-white hover:bg-[#111111] rounded-lg transition-colors"
                       >
                         <Edit2 size={18} />
                       </button>
@@ -201,8 +201,8 @@ export default function Events() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#1a1a2e] rounded-2xl border border-[#2d2d44] w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-[#2d2d44]">
+          <div className="bg-[#0a0a0a] rounded-2xl border border-[#262626] w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-[#262626]">
               <h2 className="text-xl font-semibold text-white">
                 {editingEvent ? 'Editar Evento' : 'Crear Evento'}
               </h2>
@@ -223,7 +223,7 @@ export default function Events() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white"
                   required
                 />
               </div>
@@ -235,7 +235,7 @@ export default function Events() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 min-h-[100px]"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white min-h-[100px]"
                 />
               </div>
 
@@ -247,7 +247,7 @@ export default function Events() {
                   type="text"
                   value={formData.venue}
                   onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white"
                   required
                 />
               </div>
@@ -260,7 +260,7 @@ export default function Events() {
                   type="text"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white"
                 />
               </div>
 
@@ -272,7 +272,7 @@ export default function Events() {
                   type="datetime-local"
                   value={formData.event_date}
                   onChange={(e) => setFormData({ ...formData, event_date: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white"
                   required
                 />
               </div>
@@ -285,7 +285,7 @@ export default function Events() {
                   type="url"
                   value={formData.image_url}
                   onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#252538] border border-[#2d2d44] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white"
                   placeholder="https://..."
                 />
               </div>
@@ -296,7 +296,7 @@ export default function Events() {
                   id="is_active"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-5 h-5 rounded bg-[#252538] border-[#2d2d44] text-purple-500 focus:ring-purple-500"
+                  className="w-5 h-5 rounded bg-[#111111] border-[#262626] text-white focus:ring-white"
                 />
                 <label htmlFor="is_active" className="text-gray-300">
                   Evento activo
@@ -307,13 +307,13 @@ export default function Events() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 py-3 px-4 bg-[#252538] text-gray-300 font-semibold rounded-xl hover:bg-[#2d2d44] transition-colors"
+                  className="flex-1 py-3 px-4 bg-[#111111] text-gray-300 font-semibold rounded-xl hover:bg-[#262626] transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"
+                  className="flex-1 py-3 px-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition-colors"
                 >
                   {editingEvent ? 'Actualizar' : 'Crear'}
                 </button>

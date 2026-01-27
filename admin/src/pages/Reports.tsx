@@ -1,4 +1,4 @@
-import { AlertTriangle, Check, X, Eye } from 'lucide-react';
+import { AlertTriangle, Check, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -117,8 +117,8 @@ export default function Reports() {
             onClick={() => setFilter(status)}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               filter === status
-                ? 'bg-purple-500 text-white'
-                : 'bg-[#1a1a2e] text-gray-400 hover:text-white'
+                ? 'bg-white text-black'
+                : 'bg-[#0a0a0a] text-gray-400 hover:text-white'
             }`}
           >
             {status === 'all' ? 'Todos' : statusLabels[status]}
@@ -128,10 +128,10 @@ export default function Reports() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filteredReports.length === 0 ? (
-        <div className="text-center py-12 bg-[#1a1a2e] rounded-2xl border border-[#2d2d44]">
+        <div className="text-center py-12 bg-[#0a0a0a] rounded-2xl border border-[#262626]">
           <AlertTriangle className="mx-auto mb-4 text-gray-500" size={48} />
           <p className="text-gray-400">No hay reportes {filter !== 'all' && statusLabels[filter].toLowerCase()}</p>
         </div>
@@ -140,7 +140,7 @@ export default function Reports() {
           {filteredReports.map((report) => (
             <div
               key={report.id}
-              className="bg-[#1a1a2e] rounded-2xl border border-[#2d2d44] p-6"
+              className="bg-[#0a0a0a] rounded-2xl border border-[#262626] p-6"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -185,7 +185,7 @@ export default function Reports() {
                   </div>
 
                   {report.description && (
-                    <div className="mt-4 p-4 bg-[#0f0f1a] rounded-xl">
+                    <div className="mt-4 p-4 bg-black rounded-xl">
                       <p className="text-gray-500 text-sm mb-1">Descripcion</p>
                       <p className="text-gray-300">{report.description}</p>
                     </div>

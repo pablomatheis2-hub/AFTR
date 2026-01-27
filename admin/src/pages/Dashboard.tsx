@@ -48,50 +48,23 @@ export default function Dashboard() {
       title: 'Total Eventos',
       value: stats.totalEvents,
       icon: Calendar,
-      color: 'purple',
     },
     {
       title: 'Eventos Activos',
       value: stats.activeEvents,
       icon: TrendingUp,
-      color: 'green',
     },
     {
       title: 'Total Usuarios',
       value: stats.totalUsers,
       icon: Users,
-      color: 'blue',
     },
     {
       title: 'Total Fiestas',
       value: stats.totalParties,
       icon: PartyPopper,
-      color: 'pink',
     },
   ];
-
-  const colorClasses: Record<string, { bg: string; text: string; icon: string }> = {
-    purple: {
-      bg: 'bg-purple-500/10',
-      text: 'text-purple-400',
-      icon: 'bg-purple-500/20',
-    },
-    green: {
-      bg: 'bg-green-500/10',
-      text: 'text-green-400',
-      icon: 'bg-green-500/20',
-    },
-    blue: {
-      bg: 'bg-blue-500/10',
-      text: 'text-blue-400',
-      icon: 'bg-blue-500/20',
-    },
-    pink: {
-      bg: 'bg-pink-500/10',
-      text: 'text-pink-400',
-      icon: 'bg-pink-500/20',
-    },
-  };
 
   return (
     <div>
@@ -102,21 +75,20 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((card) => {
-          const colors = colorClasses[card.color];
           const Icon = card.icon;
           return (
             <div
               key={card.title}
-              className={`${colors.bg} rounded-2xl p-6 border border-[#2d2d44]`}
+              className="bg-[#0a0a0a] rounded-2xl p-6 border border-[#262626]"
             >
               <div className="flex items-center justify-between mb-4">
-                <div className={`${colors.icon} p-3 rounded-xl`}>
-                  <Icon className={colors.text} size={24} />
+                <div className="bg-white/10 p-3 rounded-xl">
+                  <Icon className="text-white" size={24} />
                 </div>
               </div>
               <div>
                 <p className="text-gray-400 text-sm">{card.title}</p>
-                <p className={`text-3xl font-bold ${colors.text} mt-1`}>
+                <p className="text-3xl font-bold text-white mt-1">
                   {loading ? '...' : card.value}
                 </p>
               </div>
@@ -125,28 +97,28 @@ export default function Dashboard() {
         })}
       </div>
 
-      <div className="mt-8 bg-[#1a1a2e] rounded-2xl border border-[#2d2d44] p-6">
+      <div className="mt-8 bg-[#0a0a0a] rounded-2xl border border-[#262626] p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Acciones Rápidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <a
             href="/events"
-            className="flex items-center gap-3 p-4 bg-purple-500/10 rounded-xl hover:bg-purple-500/20 transition-colors"
+            className="flex items-center gap-3 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
           >
-            <Calendar className="text-purple-400" size={20} />
+            <Calendar className="text-white" size={20} />
             <span className="text-white font-medium">Gestionar Eventos</span>
           </a>
           <a
             href="/users"
-            className="flex items-center gap-3 p-4 bg-blue-500/10 rounded-xl hover:bg-blue-500/20 transition-colors"
+            className="flex items-center gap-3 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
           >
-            <Users className="text-blue-400" size={20} />
+            <Users className="text-white" size={20} />
             <span className="text-white font-medium">Ver Usuarios</span>
           </a>
           <a
             href="/parties"
-            className="flex items-center gap-3 p-4 bg-pink-500/10 rounded-xl hover:bg-pink-500/20 transition-colors"
+            className="flex items-center gap-3 p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
           >
-            <PartyPopper className="text-pink-400" size={20} />
+            <PartyPopper className="text-white" size={20} />
             <span className="text-white font-medium">Ver Fiestas</span>
           </a>
         </div>

@@ -57,17 +57,17 @@ export default function Parties() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
         </div>
       ) : parties.length === 0 ? (
-        <div className="text-center py-12 bg-[#1a1a2e] rounded-2xl border border-[#2d2d44]">
+        <div className="text-center py-12 bg-[#0a0a0a] rounded-2xl border border-[#262626]">
           <p className="text-gray-400">No hay fiestas creadas aún.</p>
         </div>
       ) : (
-        <div className="bg-[#1a1a2e] rounded-2xl border border-[#2d2d44] overflow-hidden">
+        <div className="bg-[#0a0a0a] rounded-2xl border border-[#262626] overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#2d2d44]">
+              <tr className="border-b border-[#262626]">
                 <th className="text-left p-4 text-gray-400 font-medium">Fiesta</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Tipo</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Evento</th>
@@ -79,7 +79,7 @@ export default function Parties() {
             </thead>
             <tbody>
               {parties.map((party) => (
-                <tr key={party.id} className="border-b border-[#2d2d44] last:border-0">
+                <tr key={party.id} className="border-b border-[#262626] last:border-0">
                   <td className="p-4">
                     <div>
                       <p className="text-white font-medium">{party.title}</p>
@@ -92,8 +92,8 @@ export default function Parties() {
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
                         party.type === 'pre'
-                          ? 'bg-purple-500/20 text-purple-400'
-                          : 'bg-pink-500/20 text-pink-400'
+                          ? 'bg-white/10 text-white'
+                          : 'bg-white/10 text-white'
                       }`}
                     >
                       {party.type === 'pre' ? 'Previa' : 'After'}
@@ -109,7 +109,7 @@ export default function Parties() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-[#262626] flex items-center justify-center">
                           <span className="text-white text-sm font-semibold">
                             {party.host?.full_name?.charAt(0) || '?'}
                           </span>

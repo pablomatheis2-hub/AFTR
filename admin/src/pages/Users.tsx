@@ -66,17 +66,17 @@ export default function Users() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
         </div>
       ) : users.length === 0 ? (
-        <div className="text-center py-12 bg-[#1a1a2e] rounded-2xl border border-[#2d2d44]">
+        <div className="text-center py-12 bg-[#0a0a0a] rounded-2xl border border-[#262626]">
           <p className="text-gray-400">No hay usuarios registrados aún.</p>
         </div>
       ) : (
-        <div className="bg-[#1a1a2e] rounded-2xl border border-[#2d2d44] overflow-hidden">
+        <div className="bg-[#0a0a0a] rounded-2xl border border-[#262626] overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#2d2d44]">
+              <tr className="border-b border-[#262626]">
                 <th className="text-left p-4 text-gray-400 font-medium">Usuario</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Instagram</th>
                 <th className="text-left p-4 text-gray-400 font-medium">Edad</th>
@@ -89,7 +89,7 @@ export default function Users() {
             </thead>
             <tbody>
               {users.map((user) => (
-                <tr key={user.id} className="border-b border-[#2d2d44] last:border-0">
+                <tr key={user.id} className="border-b border-[#262626] last:border-0">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       {user.avatar_url ? (
@@ -99,7 +99,7 @@ export default function Users() {
                           className="w-10 h-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-full bg-[#262626] flex items-center justify-center">
                           <span className="text-white font-semibold">
                             {user.full_name?.charAt(0) || user.email?.charAt(0) || '?'}
                           </span>
@@ -119,7 +119,7 @@ export default function Users() {
                         href={`https://instagram.com/${user.instagram_handle}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-pink-400 hover:underline"
+                        className="text-white hover:underline"
                       >
                         @{user.instagram_handle}
                       </a>
@@ -132,9 +132,9 @@ export default function Users() {
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${
                         user.gender === 'female'
-                          ? 'bg-pink-500/20 text-pink-400'
+                          ? 'bg-white/10 text-white'
                           : user.gender === 'male'
-                          ? 'bg-purple-500/20 text-purple-400'
+                          ? 'bg-white/10 text-white'
                           : 'bg-gray-500/20 text-gray-400'
                       }`}
                     >
@@ -158,7 +158,7 @@ export default function Users() {
                       onClick={() => toggleAdmin(user.id, user.is_admin)}
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
                         user.is_admin
-                          ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30'
+                          ? 'bg-white/20 text-white hover:bg-white/30'
                           : 'bg-gray-500/10 text-gray-500 hover:bg-gray-500/20 hover:text-gray-400'
                       }`}
                       title={user.is_admin ? 'Quitar acceso admin' : 'Dar acceso admin'}

@@ -45,30 +45,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user?.id) {
-        fetchUser(session.user.id).then(setUser);
+    let isMounted = true;
+    
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        
+        setSession(session);
+        if (session?.user?.id) {
+          const userData = await fetchUser(session.user.id);
+          if (isMounted) {
+            setUser(userData);
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
+        if (!isMounted) return;
+        
         setSession(session);
         if (session?.user?.id) {
           const userData = await fetchUser(session.user.id);
-          setUser(userData);
+          if (isMounted) {
+            setUser(userData);
+          }
         } else {
           setUser(null);
         }
-        setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {

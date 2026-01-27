@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { WebContainer } from '@/components/WebContainer';
+import { LoadingScreen } from '@/components/LoadingScreen';
 
 export {
   ErrorBoundary,
@@ -57,6 +58,18 @@ function RootLayoutNav() {
       notification: '#ffffff',
     },
   };
+
+  // Show loading screen while auth state is being determined
+  // This prevents child routes from rendering and fetching data prematurely
+  if (loading) {
+    return (
+      <ThemeProvider value={beRealTheme}>
+        <WebContainer>
+          <LoadingScreen />
+        </WebContainer>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider value={beRealTheme}>
