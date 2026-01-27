@@ -4,9 +4,8 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
-import { Analytics } from '@vercel/analytics/react';
 
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { WebContainer } from '@/components/WebContainer';
@@ -21,7 +20,10 @@ export const unstable_settings = {
   initialRouteName: '(auth)',
 };
 
-SplashScreen.preventAutoHideAsync();
+// Only call on native - web handles splash differently
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 const beRealTheme = {
   ...DarkTheme,
@@ -40,15 +42,9 @@ function RootLayoutNav() {
   const { session, user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  // Wait for client-side mount to prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
-    if (!mounted || loading) return;
+    if (loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
@@ -69,10 +65,9 @@ function RootLayoutNav() {
         router.replace('/(tabs)');
       }
     }
-  }, [session, user, loading, mounted, segments]);
+  }, [session, user, loading, segments]);
 
-  // Always render the same loading screen initially (for hydration)
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <ThemeProvider value={beRealTheme}>
         <WebContainer>
@@ -107,30 +102,49 @@ function RootLayoutNav() {
   );
 }
 
+// Simple black screen for SSR/initial render
+function InitialLoadingScreen() {
+  return <View style={styles.initialLoading} />;
+}
+
+const styles = StyleSheet.create({
+  initialLoading: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+});
+
 export default function RootLayout() {
+  const [mounted, setMounted] = useState(false);
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
+
+  // Track client-side mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && Platform.OS !== 'web') {
       SplashScreen.hideAsync();
     }
   }, [loaded]);
 
-  if (!loaded) {
-    return null;
+  // Always render the same thing on server and first client render
+  // This prevents hydration mismatch
+  if (!mounted || !loaded) {
+    return <InitialLoadingScreen />;
   }
 
   return (
     <AuthProvider>
       <RootLayoutNav />
-      {Platform.OS === 'web' && <Analytics />}
     </AuthProvider>
   );
 }
