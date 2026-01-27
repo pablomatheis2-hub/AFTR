@@ -3,7 +3,7 @@ import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import 'react-native-reanimated';
 import { Analytics } from '@vercel/analytics/react';
@@ -23,56 +23,56 @@ export const unstable_settings = {
 
 SplashScreen.preventAutoHideAsync();
 
+const beRealTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: '#000000',
+    card: '#0a0a0a',
+    text: '#ffffff',
+    border: '#262626',
+    primary: '#ffffff',
+    notification: '#ffffff',
+  },
+};
+
 function RootLayoutNav() {
-  const { session, user, loading, userLoading } = useAuth();
+  const { session, user, loading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  // Wait for client-side mount to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    // Wait for both auth and user data to finish loading
-    if (loading || userLoading) return;
+    if (!mounted || loading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
 
     if (!session) {
-      // No session - redirect to login if not already there
       if (!inAuthGroup) {
         router.replace('/(auth)/login');
       }
-    } else if (user === null) {
-      // Session exists but no user record yet (new signup)
-      // Let them stay where they are until user record is created
+    } else if (!user) {
+      // Session exists but no user record - stay put
       return;
     } else if (!user.onboarding_complete) {
-      // User exists but hasn't completed onboarding
       if (!inOnboardingGroup) {
         router.replace('/(onboarding)/welcome');
       }
     } else {
-      // Fully authenticated and onboarded user
       if (inAuthGroup || inOnboardingGroup) {
         router.replace('/(tabs)');
       }
     }
-  }, [session, user, loading, userLoading, segments]);
+  }, [session, user, loading, mounted, segments]);
 
-  const beRealTheme = {
-    ...DarkTheme,
-    colors: {
-      ...DarkTheme.colors,
-      background: '#000000',
-      card: '#0a0a0a',
-      text: '#ffffff',
-      border: '#262626',
-      primary: '#ffffff',
-      notification: '#ffffff',
-    },
-  };
-
-  // Show loading screen while auth state is being determined
-  // This prevents child routes from rendering and fetching data prematurely
-  if (loading || userLoading) {
+  // Always render the same loading screen initially (for hydration)
+  if (!mounted || loading) {
     return (
       <ThemeProvider value={beRealTheme}>
         <WebContainer>
@@ -82,7 +82,6 @@ function RootLayoutNav() {
     );
   }
 
-  // Show banned screen if user is banned
   if (user?.is_banned) {
     return (
       <ThemeProvider value={beRealTheme}>

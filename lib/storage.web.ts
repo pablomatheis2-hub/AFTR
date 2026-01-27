@@ -1,11 +1,9 @@
 // Web storage implementation using localStorage
-// Safe for SSR - returns null when window is not available
-
-const isServer = typeof window === 'undefined';
+// Safe for SSR - checks window availability on each call
 
 export const storage = {
   getItem: async (key: string): Promise<string | null> => {
-    if (isServer) return null;
+    if (typeof window === 'undefined') return null;
     try {
       return localStorage.getItem(key);
     } catch {
@@ -13,15 +11,15 @@ export const storage = {
     }
   },
   setItem: async (key: string, value: string): Promise<void> => {
-    if (isServer) return;
+    if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(key, value);
     } catch {
-      // Ignore storage errors (e.g., quota exceeded, private browsing)
+      // Ignore storage errors
     }
   },
   removeItem: async (key: string): Promise<void> => {
-    if (isServer) return;
+    if (typeof window === 'undefined') return;
     try {
       localStorage.removeItem(key);
     } catch {

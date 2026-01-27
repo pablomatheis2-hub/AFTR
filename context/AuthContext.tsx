@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { Platform, AppState, AppStateStatus } from 'react-native';
-import { Session, AuthChangeEvent } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
+import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types/database';
 
@@ -8,7 +8,6 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  userLoading: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -23,21 +22,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userLoading, setUserLoading] = useState(false);
-  const appState = useRef(AppState.currentState);
 
-  const fetchUser = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+  const fetchUser = async (userId: string): Promise<User | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching user:', error);
+      if (error) {
+        console.error('Error fetching user:', error.message);
+        return null;
+      }
+      return data as User | null;
+    } catch (err) {
+      console.error('Error fetching user:', err);
       return null;
     }
-    return data as User | null;
   };
 
   const refreshUser = async () => {
@@ -48,72 +50,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!isMounted) return;
-        
-        setSession(session);
-        if (session?.user?.id) {
-          setUserLoading(true);
-          const userData = await fetchUser(session.user.id);
-          if (isMounted) {
-            setUser(userData);
-            setUserLoading(false);
-          }
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+    // Skip on server
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    const init = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (!active) return;
+
+      setSession(currentSession);
+      if (currentSession?.user?.id) {
+        const userData = await fetchUser(currentSession.user.id);
+        if (active) setUser(userData);
       }
+      setLoading(false);
     };
 
-    initializeAuth();
+    init();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        if (!isMounted) return;
-        
-        setSession(session);
-        if (session?.user?.id) {
-          setUserLoading(true);
-          const userData = await fetchUser(session.user.id);
-          if (isMounted) {
-            setUser(userData);
-            setUserLoading(false);
-          }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        if (!active) return;
+        setSession(newSession);
+        if (newSession?.user?.id) {
+          const userData = await fetchUser(newSession.user.id);
+          if (active) setUser(userData);
         } else {
           setUser(null);
-          setUserLoading(false);
         }
       }
     );
 
     return () => {
-      isMounted = false;
+      active = false;
       subscription.unsubscribe();
     };
   }, []);
-
-  // Refresh user data when app comes back to foreground
-  useEffect(() => {
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        if (session?.user?.id) {
-          refreshUser();
-        }
-      }
-      appState.current = nextAppState;
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription.remove();
-  }, [session?.user?.id]);
 
   const signUp = async (email: string, password: string) => {
     const isWeb = typeof window !== 'undefined' && Platform.OS === 'web';
@@ -180,7 +156,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user,
         loading,
-        userLoading,
         signUp,
         signIn,
         signOut,
