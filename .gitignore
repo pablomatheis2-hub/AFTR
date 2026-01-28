@@ -2,12 +2,20 @@
 
 # dependencies
 node_modules/
+.pnpm-store/
+
+# Turborepo
+.turbo/
 
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+
+# Next.js
+.next/
+out/
 
 # Native
 .kotlin/
@@ -31,6 +39,7 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 
 # typescript
@@ -39,3 +48,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Vercel
+.vercel

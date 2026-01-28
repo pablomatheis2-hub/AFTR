@@ -3,7 +3,12 @@
     "allow": [
       "Bash(npx expo install:*)",
       "Bash(done)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(dir /b \"C:\\\\Users\\\\pablomatheis\\\\Desktop\\\\AFTR\")",
+      "Bash(xcopy:*)",
+      "Bash(powershell -Command \"Copy-Item -Path ''app'' -Destination ''apps\\\\mobile\\\\app'' -Recurse -Force; Copy-Item -Path ''components'' -Destination ''apps\\\\mobile\\\\components'' -Recurse -Force; Copy-Item -Path ''context'' -Destination ''apps\\\\mobile\\\\context'' -Recurse -Force; Copy-Item -Path ''lib'' -Destination ''apps\\\\mobile\\\\lib'' -Recurse -Force; Copy-Item -Path ''assets'' -Destination ''apps\\\\mobile\\\\assets'' -Recurse -Force\")",
+      "Bash(powershell -Command:*)",
+      "Bash(npm install:*)"
     ]
   }
 }

@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "AFTR",
+    "slug": "AFTR",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "aftr",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aftr.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "AFTR needs your location to show you parties nearby."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.aftr.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png",
+      "name": "AFTR",
+      "shortName": "AFTR",
+      "description": "Todo empieza antes de entrar al club. Encuentra y organiza previas y afters para eventos.",
+      "lang": "es",
+      "themeColor": "#000000",
+      "backgroundColor": "#000000"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AFTR needs your location to show you parties nearby."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AFTR needs access to your photos to set your profile picture."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1, user-scalable=no" />
+    
+    <!-- Primary Meta Tags -->
+    <title>AFTR - Todo empieza antes de entrar al club</title>
+    <meta name="title" content="AFTR - Todo empieza antes de entrar al club" />
+    <meta name="description" content="Encuentra y organiza previas y afters para eventos y fiestas. Conecta con otros asistentes antes y despues del club." />
+    <meta name="keywords" content="previas, afters, fiestas, eventos, club, discoteca, noche, salir, quedadas, fiesta previa, after party, Madrid, Barcelona, Espana" />
+    <meta name="author" content="AFTR" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="Spanish" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://aftr.es/" />
+    <meta property="og:title" content="AFTR - Todo empieza antes de entrar al club" />
+    <meta property="og:description" content="Encuentra y organiza previas y afters para eventos y fiestas. Conecta con otros asistentes antes y despues del club." />
+    <meta property="og:image" content="https://aftr.es/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="AFTR - Previas y Afters" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:site_name" content="AFTR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://aftr.es/" />
+    <meta name="twitter:title" content="AFTR - Todo empieza antes de entrar al club" />
+    <meta name="twitter:description" content="Encuentra y organiza previas y afters para eventos y fiestas. Conecta con otros asistentes antes y despues del club." />
+    <meta name="twitter:image" content="https://aftr.es/og-image.png" />
+
+    <!-- Apple -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AFTR" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://aftr.es/" />
+
+    <!-- Preconnect to external resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AFTR",
+      "description": "Encuentra y organiza previas y afters para eventos y fiestas. Conecta con otros asistentes antes y despues del club.",
+      "url": "https://aftr.es",
+      "applicationCategory": "SocialNetworkingApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "AFTR",
+        "url": "https://aftr.es"
+      },
+      "inLanguage": "es",
+      "potentialAction": {
+        "@type": "ViewAction",
+        "target": "https://aftr.es"
+      }
+    }
+    </script>
+
+    <style>
+      /* Global Reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html, body, #root {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background-color: #000000;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Hide scrollbars but keep scrolling */
+      ::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+      }
+
+      /* Focus styles */
+      input:focus, textarea:focus, button:focus {
+        outline: none;
+      }
+
+      /* Date/time input styling for dark theme */
+      input[type="date"],
+      input[type="time"] {
+        color-scheme: dark;
+      }
+
+      input[type="date"]::-webkit-calendar-picker-indicator,
+      input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+      }
+
+      /* Remove tap highlight on mobile */
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* Smooth scrolling */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* Loading animation */
+      .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #000;
+      }
+
+      .loading-spinner::after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        border: 3px solid #333;
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>Necesitas habilitar JavaScript para usar AFTR.</noscript>
+    <div id="root">
+      <div class="loading-spinner"></div>
+    </div>
+  </body>
+</html>

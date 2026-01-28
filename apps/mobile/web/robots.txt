@@ -1,0 +1,24 @@
+# robots.txt for AFTR
+# https://aftr.es
+
+User-agent: *
+Allow: /
+
+# Allow all search engines
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Sitemap location
+Sitemap: https://aftr.es/sitemap.xml
+
+# Crawl-delay (optional, be gentle with bots)
+Crawl-delay: 1
+
+# Disallow admin and auth routes from indexing
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /(auth)/
+Disallow: /(onboarding)/
