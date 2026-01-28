@@ -54,21 +54,34 @@ export function Providers({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const init = async () => {
       try {
         const {
           data: { session: currentSession },
         } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(currentSession);
 
         if (currentSession?.user?.id) {
           const userData = await fetchUser(currentSession.user.id);
-          setUser(userData);
+          if (isMounted) {
+            setUser(userData);
+          }
         }
       } catch (error) {
+        // Ignore AbortError which happens during component unmount (e.g., React Strict Mode)
+        if (error instanceof Error && error.name === "AbortError") {
+          return;
+        }
         console.error("Auth initialization error:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -77,16 +90,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      if (!isMounted) return;
       setSession(newSession);
       if (newSession?.user?.id) {
         const userData = await fetchUser(newSession.user.id);
-        setUser(userData);
+        if (isMounted) {
+          setUser(userData);
+        }
       } else {
         setUser(null);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, [supabase]);
 
   const signIn = async (email: string, password: string) => {

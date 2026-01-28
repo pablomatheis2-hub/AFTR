@@ -1,36 +1,44 @@
 // Shared utility functions
 
+// Spanish day/month names for consistent formatting (avoids hydration mismatch)
+const DAYS_SHORT = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+const DAYS_LONG = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+const MONTHS_LONG = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+function padZero(n: number): string {
+  return n < 10 ? `0${n}` : `${n}`;
+}
+
 export function formatDate(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  });
+  const day = DAYS_SHORT[date.getDay()];
+  const month = MONTHS_SHORT[date.getMonth()];
+  const dayNum = date.getDate();
+  return `${day}, ${dayNum} ${month}`;
 }
 
 export function formatTime(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return `${padZero(date.getHours())}:${padZero(date.getMinutes())}`;
 }
 
 export function formatDateParts(dateString: string) {
   const date = new Date(dateString);
   return {
-    day: date.toLocaleDateString('es-ES', { weekday: 'short' }),
+    day: DAYS_SHORT[date.getDay()],
     date: date.getDate(),
-    month: date.toLocaleDateString('es-ES', { month: 'short' }),
-    time: date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+    month: MONTHS_SHORT[date.getMonth()],
+    time: `${padZero(date.getHours())}:${padZero(date.getMinutes())}`,
   };
 }
 
 export function formatFullDate(dateString: string) {
   const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+  const weekday = DAYS_LONG[date.getDay()];
+  const dayNum = date.getDate();
+  const month = MONTHS_LONG[date.getMonth()];
+  return `${weekday}, ${dayNum} de ${month}`;
 }
 
 // Calculate gender counts from attendees array
