@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MainNav } from "@/components/main-nav";
 import { useSupabase, useAuth } from "@/app/providers";
-import type { Event } from "@aftr/shared/types";
+import type { Event, PartyInsert } from "@aftr/shared/types";
 import { formatDate } from "@aftr/shared/utils";
 
 export default function CreatePartyPage() {
@@ -83,24 +83,26 @@ export default function CreatePartyPage() {
 
     setSubmitting(true);
 
+    const partyData: PartyInsert = {
+      event_id: eventId,
+      host_id: session.user.id,
+      type: partyType,
+      title,
+      description: description || null,
+      address: address || null,
+      start_time: new Date(startTime).toISOString(),
+      min_age: parseInt(minAge),
+      max_age: parseInt(maxAge),
+      max_capacity: maxCapacity ? parseInt(maxCapacity) : null,
+    };
+
     const { data, error: insertError } = await supabase
       .from("parties")
-      .insert({
-        event_id: eventId,
-        host_id: session.user.id,
-        type: partyType,
-        title,
-        description: description || null,
-        address: address || null,
-        start_time: new Date(startTime).toISOString(),
-        min_age: parseInt(minAge),
-        max_age: parseInt(maxAge),
-        max_capacity: maxCapacity ? parseInt(maxCapacity) : null,
-      })
+      .insert(partyData as any)
       .select()
-      .single();
+      .single() as { data: { id: string } | null; error: any };
 
-    if (insertError) {
+    if (insertError || !data) {
       setError("No pudimos crear la fiesta. Intenta de nuevo.");
       setSubmitting(false);
       return;

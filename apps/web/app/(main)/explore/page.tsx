@@ -59,10 +59,7 @@ export default function ExplorePage() {
       .select("party_id, user:users!user_id(gender)")
       .in("party_id", partyIds);
 
-    const attendeesByParty = new Map<
-      string,
-      Array<{ user?: { gender?: string } | null }>
-    >();
+    const attendeesByParty = new Map<string, Array<any>>();
     for (const attendee of allAttendees || []) {
       const list = attendeesByParty.get(attendee.party_id) || [];
       list.push(attendee);
@@ -87,7 +84,8 @@ export default function ExplorePage() {
 
   const filteredParties = parties.filter((p) => p.type === activeTab);
   const partiesWithLocation = filteredParties.filter(
-    (p) => p.latitude && p.longitude
+    (p): p is typeof p & { latitude: number; longitude: number } => 
+      p.latitude !== null && p.longitude !== null
   );
 
   return (

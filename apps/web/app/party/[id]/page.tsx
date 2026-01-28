@@ -31,7 +31,7 @@ type PartyDetail = Party & {
 
 async function getPartyData(id: string) {
   const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -39,7 +39,7 @@ async function getPartyData(id: string) {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -66,7 +66,7 @@ async function getPartyData(id: string) {
     .eq("party_id", id);
 
   const attendees =
-    attendeesData?.map((a: { user: User }) => a.user).filter(Boolean) || [];
+    attendeesData?.map((a: any) => Array.isArray(a.user) ? a.user[0] : a.user).filter(Boolean) || [];
 
   return {
     party: party as PartyDetail,

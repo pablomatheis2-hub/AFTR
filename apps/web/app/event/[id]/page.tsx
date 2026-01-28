@@ -20,7 +20,7 @@ type PartyWithHost = Party & {
 
 async function getEventData(id: string) {
   const cookieStore = await cookies();
-  const supabase = createServerClient<Database>(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -28,7 +28,7 @@ async function getEventData(id: string) {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -65,10 +65,7 @@ async function getEventData(id: string) {
     .select("party_id, user:users!user_id(gender)")
     .in("party_id", partyIds);
 
-  const attendeesByParty = new Map<
-    string,
-    Array<{ user?: { gender?: string } | null }>
-  >();
+  const attendeesByParty = new Map<string, Array<any>>();
   for (const attendee of allAttendees || []) {
     const list = attendeesByParty.get(attendee.party_id) || [];
     list.push(attendee);

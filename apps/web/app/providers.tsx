@@ -3,10 +3,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
-import type { Database, User } from "@aftr/shared/types";
+import type { User } from "@aftr/shared/types";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseContext = {
-  supabase: SupabaseClient<Database>;
+  supabase: SupabaseClient<any>;
   session: Session | null;
   user: User | null;
   loading: boolean;
@@ -22,7 +23,7 @@ const Context = createContext<SupabaseContext | undefined>(undefined);
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [supabase] = useState(() =>
-    createBrowserClient<Database>(
+    createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
