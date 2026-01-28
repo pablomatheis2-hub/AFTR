@@ -33,7 +33,7 @@ export default function WelcomePage() {
 
         <Button
           className="w-full"
-          onClick={() => router.push("/onboarding/profile")}
+          onClick={() => router.push("/onboarding/profile-setup")}
         >
           Empezar
         </Button>
