@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
-import { MapPin, Loader2, Sun, Moon } from "lucide-react";
+import { Loader2, Sun, Moon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PartyCard } from "@/components/party-card";
 import { MainNav } from "@/components/main-nav";
@@ -16,15 +15,6 @@ type PartyWithHost = Party & {
   male_count: number;
   female_count: number;
 };
-
-const MapComponent = dynamic(() => import("@/components/map-view"), {
-  ssr: false,
-  loading: () => (
-    <div className="h-[300px] bg-muted flex items-center justify-center">
-      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-    </div>
-  ),
-});
 
 export default function ExplorePage() {
   const { supabase } = useSupabase();
@@ -83,10 +73,6 @@ export default function ExplorePage() {
   };
 
   const filteredParties = parties.filter((p) => p.type === activeTab);
-  const partiesWithLocation = filteredParties.filter(
-    (p): p is typeof p & { latitude: number; longitude: number } => 
-      p.latitude !== null && p.longitude !== null
-  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -99,22 +85,6 @@ export default function ExplorePage() {
           </p>
         </header>
 
-        {/* Map */}
-        <div className="rounded-xl overflow-hidden mb-6">
-          <MapComponent
-            parties={partiesWithLocation}
-            center={
-              partiesWithLocation.length > 0
-                ? {
-                    lat: partiesWithLocation[0].latitude!,
-                    lng: partiesWithLocation[0].longitude!,
-                  }
-                : { lat: 40.4168, lng: -3.7038 } // Madrid default
-            }
-          />
-        </div>
-
-        {/* Tabs and list */}
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as "pre" | "after")}

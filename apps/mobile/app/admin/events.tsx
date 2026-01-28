@@ -10,8 +10,11 @@ import {
   TextInput,
   Alert,
   Switch,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { decode } from 'base64-arraybuffer';
 import { supabase } from '@/lib/supabase';
 import { Event } from '@/types/database';
 import { BottomSheet } from '@/components/BottomSheet';
@@ -34,6 +37,8 @@ export default function AdminEvents() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [imageUrl, setImageUrl] = useState('');
+  const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [selectedImageBase64, setSelectedImageBase64] = useState<string | null>(null);
   const [eventDate, setEventDate] = useState(new Date());
   const [isActive, setIsActive] = useState(true);
 
@@ -67,9 +72,71 @@ export default function AdminEvents() {
     setLatitude(null);
     setLongitude(null);
     setImageUrl('');
+    setSelectedImageUri(null);
+    setSelectedImageBase64(null);
     setEventDate(new Date());
     setIsActive(true);
     setEditingEvent(null);
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería para seleccionar una imagen.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const base64 = result.assets[0].base64;
+      // Validate image size (base64 is ~1.33x larger than binary)
+      if (base64 && base64.length > 5 * 1024 * 1024 * 1.33) {
+        Alert.alert('Imagen muy grande', 'La imagen debe ser menor a 5MB');
+        return;
+      }
+      setSelectedImageUri(result.assets[0].uri);
+      setSelectedImageBase64(base64 || null);
+      setImageUrl(''); // Clear manual URL if picking an image
+    }
+  };
+
+  const uploadEventImage = async (): Promise<string | null> => {
+    if (!selectedImageBase64 || !selectedImageUri) return null;
+    
+    try {
+      const fileExt = selectedImageUri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `events/${Date.now()}.${fileExt}`;
+      const contentType = fileExt === 'png' ? 'image/png' : 'image/jpeg';
+
+      const { error: uploadError } = await supabase.storage
+        .from('events')
+        .upload(fileName, decode(selectedImageBase64), {
+          contentType,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        Alert.alert('Error', 'No se pudo subir la imagen.');
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('events')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Event image upload error:', error);
+      return null;
+    }
   };
 
   const openCreateForm = () => {
@@ -86,6 +153,8 @@ export default function AdminEvents() {
     setLatitude(event.latitude);
     setLongitude(event.longitude);
     setImageUrl(event.image_url || '');
+    setSelectedImageUri(null);
+    setSelectedImageBase64(null);
     setEventDate(new Date(event.event_date));
     setIsActive(event.is_active);
     setShowForm(true);
@@ -99,6 +168,15 @@ export default function AdminEvents() {
 
     setSaving(true);
 
+    // Upload image if one was selected
+    let finalImageUrl = imageUrl.trim() || null;
+    if (selectedImageBase64) {
+      const uploadedUrl = await uploadEventImage();
+      if (uploadedUrl) {
+        finalImageUrl = uploadedUrl;
+      }
+    }
+
     const eventData = {
       title: title.trim(),
       venue: venue.trim(),
@@ -106,7 +184,7 @@ export default function AdminEvents() {
       address: address.trim() || null,
       latitude,
       longitude,
-      image_url: imageUrl.trim() || null,
+      image_url: finalImageUrl,
       event_date: eventDate.toISOString(),
       is_active: isActive,
     };
@@ -308,16 +386,31 @@ export default function AdminEvents() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Imagen (URL)</Text>
-            <TextInput
-              style={styles.input}
-              value={imageUrl}
-              onChangeText={setImageUrl}
-              placeholder="https://ejemplo.com/imagen.jpg"
-              placeholderTextColor="#666"
-              autoCapitalize="none"
-              keyboardType="url"
-            />
+            <Text style={styles.inputLabel}>Imagen del Evento</Text>
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+              {selectedImageUri ? (
+                <Image source={{ uri: selectedImageUri }} style={styles.imagePreview} />
+              ) : imageUrl ? (
+                <Image source={{ uri: imageUrl }} style={styles.imagePreview} />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Ionicons name="image-outline" size={32} color="#666" />
+                  <Text style={styles.imagePlaceholderText}>Toca para seleccionar imagen</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            {(selectedImageUri || imageUrl) && (
+              <TouchableOpacity
+                style={styles.removeImageButton}
+                onPress={() => {
+                  setSelectedImageUri(null);
+                  setSelectedImageBase64(null);
+                  setImageUrl('');
+                }}
+              >
+                <Text style={styles.removeImageText}>Eliminar imagen</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.inputGroup}>
@@ -519,6 +612,37 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: 'top',
+  },
+  imagePicker: {
+    backgroundColor: '#111',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#262626',
+    overflow: 'hidden',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 180,
+    resizeMode: 'cover',
+  },
+  imagePlaceholder: {
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  imagePlaceholderText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  removeImageButton: {
+    marginTop: 8,
+    alignSelf: 'center',
+  },
+  removeImageText: {
+    color: '#ff4444',
+    fontSize: 14,
+    fontWeight: '500',
   },
   dateButton: {
     backgroundColor: '#111',

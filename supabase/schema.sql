@@ -245,6 +245,48 @@ create policy "Anyone can view avatars"
   on storage.objects for select
   using (bucket_id = 'avatars');
 
+-- Storage bucket for event images
+-- First, create a bucket named 'events' in the Storage section of your Supabase Dashboard
+
+-- Storage policies for events bucket
+-- Allow admins to upload event images
+create policy "Admins can upload event images"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'events' 
+    and exists (
+      select 1 from public.users
+      where users.id = auth.uid() and users.is_admin = true
+    )
+  );
+
+-- Allow admins to update event images
+create policy "Admins can update event images"
+  on storage.objects for update
+  using (
+    bucket_id = 'events' 
+    and exists (
+      select 1 from public.users
+      where users.id = auth.uid() and users.is_admin = true
+    )
+  );
+
+-- Allow admins to delete event images
+create policy "Admins can delete event images"
+  on storage.objects for delete
+  using (
+    bucket_id = 'events' 
+    and exists (
+      select 1 from public.users
+      where users.id = auth.uid() and users.is_admin = true
+    )
+  );
+
+-- Allow public read access to event images
+create policy "Anyone can view event images"
+  on storage.objects for select
+  using (bucket_id = 'events');
+
 -- Sample events data (for testing)
 insert into public.events (title, venue, description, event_date, is_active) values
   ('Mambo Club Friday Night', 'Mambo Club', 'The hottest Friday night party in town. Electronic music all night long.', '2026-02-06 23:00:00+00', true),

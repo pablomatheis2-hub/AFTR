@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Plus, Edit2, Trash2, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { Event } from '../../../types/database';
 
@@ -8,6 +8,10 @@ export default function Events() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -34,13 +38,75 @@ export default function Events() {
     setLoading(false);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen debe ser menor a 5MB');
+        return;
+      }
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setFormData({ ...formData, image_url: '' }); // Clear manual URL
+    }
+  };
+
+  const uploadEventImage = async (): Promise<string | null> => {
+    if (!selectedFile) return null;
+    
+    setUploading(true);
+    try {
+      const fileExt = selectedFile.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `events/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('events')
+        .upload(fileName, selectedFile, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        alert('No se pudo subir la imagen.');
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('events')
+        .getPublicUrl(fileName);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Event image upload error:', error);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Upload image if one was selected
+    let finalImageUrl = formData.image_url || null;
+    if (selectedFile) {
+      const uploadedUrl = await uploadEventImage();
+      if (uploadedUrl) {
+        finalImageUrl = uploadedUrl;
+      }
+    }
+
+    const eventData = {
+      ...formData,
+      image_url: finalImageUrl,
+    };
 
     if (editingEvent) {
       const { error } = await supabase
         .from('events')
-        .update(formData)
+        .update(eventData)
         .eq('id', editingEvent.id);
 
       if (!error) {
@@ -48,7 +114,7 @@ export default function Events() {
         closeModal();
       }
     } else {
-      const { error } = await supabase.from('events').insert(formData);
+      const { error } = await supabase.from('events').insert(eventData);
 
       if (!error) {
         fetchEvents();
@@ -69,6 +135,8 @@ export default function Events() {
 
   const openEditModal = (event: Event) => {
     setEditingEvent(event);
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setFormData({
       title: event.title,
       description: event.description || '',
@@ -83,6 +151,8 @@ export default function Events() {
 
   const openCreateModal = () => {
     setEditingEvent(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
     setFormData({
       title: '',
       description: '',
@@ -98,6 +168,17 @@ export default function Events() {
   const closeModal = () => {
     setShowModal(false);
     setEditingEvent(null);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+
+  const removeImage = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setFormData({ ...formData, image_url: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -279,15 +360,49 @@ export default function Events() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  URL de Imagen
+                  Imagen del Evento
                 </label>
                 <input
-                  type="url"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#111111] border border-[#262626] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-white"
-                  placeholder="https://..."
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
                 />
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full bg-[#111111] border border-[#262626] rounded-xl overflow-hidden cursor-pointer hover:border-gray-500 transition-colors"
+                >
+                  {previewUrl || formData.image_url ? (
+                    <div className="relative">
+                      <img
+                        src={previewUrl || formData.image_url}
+                        alt="Preview"
+                        className="w-full h-48 object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Upload className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-32 flex flex-col items-center justify-center gap-2 text-gray-500">
+                      <ImageIcon size={32} />
+                      <span className="text-sm">Click para seleccionar imagen</span>
+                    </div>
+                  )}
+                </div>
+                {(previewUrl || formData.image_url) && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage();
+                    }}
+                    className="mt-2 text-sm text-red-400 hover:text-red-300"
+                  >
+                    Eliminar imagen
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
@@ -307,15 +422,24 @@ export default function Events() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 py-3 px-4 bg-[#111111] text-gray-300 font-semibold rounded-xl hover:bg-[#262626] transition-colors"
+                  disabled={uploading}
+                  className="flex-1 py-3 px-4 bg-[#111111] text-gray-300 font-semibold rounded-xl hover:bg-[#262626] transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 px-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition-colors"
+                  disabled={uploading}
+                  className="flex-1 py-3 px-4 bg-white text-black font-semibold rounded-xl hover:bg-gray-100 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {editingEvent ? 'Actualizar' : 'Crear'}
+                  {uploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      Subiendo...
+                    </>
+                  ) : (
+                    editingEvent ? 'Actualizar' : 'Crear'
+                  )}
                 </button>
               </div>
             </form>

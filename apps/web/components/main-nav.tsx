@@ -16,15 +16,14 @@ export function MainNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center max-w-4xl mx-auto px-4">
-        <div className="mr-4 hidden md:flex">
+    <>
+      {/* Desktop top navigation */}
+      <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
+        <div className="container flex h-14 items-center max-w-4xl mx-auto px-4">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="hidden font-bold sm:inline-block tracking-widest">
-              AFTR
-            </span>
+            <span className="font-bold tracking-widest">AFTR</span>
           </Link>
-          <nav className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-6 text-sm">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -39,16 +38,15 @@ export function MainNav() {
                 {item.label}
               </Link>
             ))}
-          </nav>
+          </div>
         </div>
-        <div className="flex flex-1 items-center justify-between md:hidden">
-          <Link href="/" className="font-bold tracking-widest">
-            AFTR
-          </Link>
-        </div>
-      </div>
+      </nav>
+
       {/* Mobile bottom navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0)" }}
+      >
         <div className="flex h-16 items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -68,7 +66,7 @@ export function MainNav() {
             );
           })}
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
