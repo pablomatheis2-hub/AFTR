@@ -1,8 +1,8 @@
 {
-  "buildCommand": "pnpm turbo build --filter=@aftr/web",
+  "buildCommand": "npx turbo build --filter=@aftr/web",
   "outputDirectory": "apps/web/.next",
   "framework": "nextjs",
-  "installCommand": "pnpm install",
+  "installCommand": "npm install",
   "headers": [
     {
       "source": "/(.*)",
